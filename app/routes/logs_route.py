@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask import render_template
 from flask_jwt_extended import  jwt_required
 import json
-from decorators import api_key_required
+from app.decorators import api_key_required
 
 
 logs_bp = Blueprint('logs', __name__)

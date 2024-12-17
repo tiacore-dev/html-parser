@@ -1,17 +1,17 @@
 from sqlalchemy import exists
-from database.models.user import User  
+from app.database.models import User  
 import uuid
-from database.db_globals import Session
+from app.database.db_globals import Session
 
 class UserManager:
     def __init__(self):
         self.Session = Session
 
-    def add_user_password(self, username, password, auth_type='password'):
+    def add_user(self, username, password):
         """Добавляем пользователя стандартно"""
         session = self.Session()
         id = str(uuid.uuid4())
-        new_user = User(id=id, user_id=username, auth_type=auth_type)
+        new_user = User(user_id=id, login=username)
         new_user.set_password(password)  # Устанавливаем хэш пароля
         session.add(new_user)
         session.commit()
@@ -20,7 +20,7 @@ class UserManager:
     def check_password(self, username, password):
         """Проверяем пароль пользователя"""
         session = self.Session()
-        user = session.query(User).filter_by(user_id=username).first()
+        user = session.query(User).filter_by(login=username).first()
         session.close()
         if user and user.check_password(password):
             return True
@@ -29,7 +29,7 @@ class UserManager:
     def update_user_password(self, username, new_password):
         """Обновляем пароль пользователя"""
         session = self.Session()
-        user = session.query(User).filter_by(user_id=username).first()
+        user = session.query(User).filter_by(login=username).first()
         if user:
             user.set_password(new_password)  # Обновляем хэш пароля
             session.commit()
@@ -39,7 +39,7 @@ class UserManager:
     def user_exists(self, username):
         """Проверка существования пользователя по имени"""
         session = self.Session()
-        exists_query = session.query(exists().where(User.user_id == username)).scalar()
+        exists_query = session.query(exists().where(User.login == username)).scalar()
         session.close()
         return exists_query
     
@@ -50,7 +50,7 @@ class UserManager:
         session=self.Session()
         try:
             # Находим пользователя по user_id
-            user = session.query(User).filter_by(user_id=username).first()
+            user = session.query(User).filter_by(login=username).first()
 
             if user:
                 # Если пользователь найден, удаляем его
@@ -72,7 +72,7 @@ class UserManager:
     def get_user_id_by_username(self, username):
         session=self.Session()
         try:
-            user = session.query(User).filter_by(user_id=username).first()
+            user = session.query(User).filter_by(login=username).first()
             user_id=user.id
             return user_id
         finally:

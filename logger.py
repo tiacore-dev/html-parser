@@ -27,12 +27,11 @@ class DatabaseLogHandler(logging.Handler):
         log_entry = self.format(record)
         db = LogManager()
 
-        # Извлекаем user_id из дополнительных данных
-        user_id = getattr(record, 'user_id', 'unknown')  # Если user_id не установлен, использовать 'unknown'
+ # Если user_id не установлен, использовать 'unknown'
 
         try:
             # Записываем лог в базу данных
-            db.add_logs(user_id=user_id, action=record.levelname, message=log_entry)
+            db.add_logs(action=record.levelname, message=log_entry)
         except Exception as e:
             print(f"Ошибка при записи лога в базу данных: {e}")
 

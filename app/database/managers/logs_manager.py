@@ -1,5 +1,5 @@
-from database.models.logs import Logs
-from database.db_globals import Session
+from app.database.models import Logs
+from app.database.db_globals import Session
 from datetime import timedelta, datetime
 
 class LogManager():

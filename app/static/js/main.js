@@ -100,7 +100,7 @@ $(document).ready(function() {
             success: function(response) {
                 saveTokens(response.access_token, response.refresh_token);
                 $('#loginAlert').html('<div class="alert alert-success">Login successful!</div>');
-                window.location.href = '/account';
+                window.location.href = '/';
             },
             error: function(xhr) {
                 let errorMsg = 'An error occurred.';

@@ -6,7 +6,7 @@ Base = declarative_base()
 
 def init_db(database_url):
     
-    from models import RequestLog, User, Schedule
+    from app.database.models import User, Logs
     engine = create_engine(database_url, echo=False)
     Session = sessionmaker(bind=engine)
     # Создание всех таблиц

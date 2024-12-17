@@ -12,7 +12,7 @@ $(document).ready(function() {
         window.location.href = '/login';
     } else {
         $.ajax({
-            url: '/admin_protected',
+            url: '/protected',
             type: 'GET',
             headers: {
                 'Authorization': 'Bearer ' + token

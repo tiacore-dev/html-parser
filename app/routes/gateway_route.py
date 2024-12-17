@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, request
 import logging
-from decorators import api_key_required
+from app.decorators import api_key_required
 import json
-from parsers.courierexe_parse import courierexe
+from app.parsers.courierexe_parse import courierexe
 # Получаем логгер по его имени
 logger = logging.getLogger('parser')
 

@@ -7,7 +7,7 @@ logger = logging.getLogger('parser')
 
 account_bp = Blueprint('account', __name__)
 
-@account_bp.route('/account', methods=['GET'])
+@account_bp.route('/', methods=['GET'])
 def account():
     return render_template('account.html')
 
@@ -16,7 +16,6 @@ def account():
 def protected():
     try:
         current_user = get_jwt_identity()
-        current_user=json.loads(current_user)
         logger.info(f"Пользователь авторизован: {current_user}")
         return jsonify({"message": "Access granted"}), 200
     except Exception as e:
@@ -28,12 +27,5 @@ def protected():
 @jwt_required()  # Требуется авторизация с JWT
 def get_username():
     current_user = get_jwt_identity()
-    current_user=json.loads(current_user)
-    from app.database.managers.user_manager import UserManager
-    # Создаем экземпляр менеджера базы данных
-    db = UserManager()
-    logger.info(f"Запрос имени пользователя от пользователя: {current_user['user_id']}")
-    user=db.get_user_by_user_id(current_user['user_id'])
-    username=user.username
-    logger.info(f"Получено имя пользователя: {username}")
-    return jsonify(username), 200
+    logger.info(f"Получено имя пользователя: {current_user}")
+    return jsonify(current_user), 200
