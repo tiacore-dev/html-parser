@@ -63,7 +63,7 @@ def create_app():
 
     # Обеспечение корректного завершения планировщика при остановке приложения
     @app.teardown_appcontext
-    def shutdown_scheduler(exception=None):
+    def shutdown_scheduler(exception=None):  # pylint: disable=unused-argument
         scheduler.shutdown(wait=False)
         logger.info("Планировщик задач APScheduler успешно остановлен.")
 
