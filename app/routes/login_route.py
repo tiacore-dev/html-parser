@@ -1,28 +1,20 @@
-
-from flask_jwt_extended import create_access_token
 from flask import jsonify, request, Blueprint, render_template
-from flask_jwt_extended import create_refresh_token, get_jwt_identity, verify_jwt_in_request
-import json
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, verify_jwt_in_request
 
 
-login_bp = Blueprint('login', __name__)
-
-
+login_bp = Blueprint('login_bp', __name__)
 
 
 # Маршрут для страницы входа
 @login_bp.route('/login', methods=['GET'])
-def login():
+def login_func():
     return render_template('login.html')
-
-
 
 
 # Выход из системы
 @login_bp.route('/logout')
 def logout():
     return jsonify({"msg": "Logout successful"}), 200
-
 
 
 # Маршрут для входа (авторизации)
@@ -44,8 +36,6 @@ def auth():
     return jsonify(access_token=access_token, refresh_token=refresh_token), 200
 
 
-    
-
 @login_bp.route('/refresh', methods=['POST'])
 def refresh():
     # Получение токена из тела запроса
@@ -64,5 +54,5 @@ def refresh():
 
     # Генерация нового access токена
     new_access_token = create_access_token(identity=current_user)
-    new_refresh_token = create_refresh_token(identity = current_user)
-    return jsonify(access_token= new_access_token, refresh_token= new_refresh_token), 200
+    new_refresh_token = create_refresh_token(identity=current_user)
+    return jsonify(access_token=new_access_token, refresh_token=new_refresh_token), 200

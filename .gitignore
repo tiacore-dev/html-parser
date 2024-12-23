@@ -6,7 +6,7 @@ dispatcher.py
 # C extensions
 *.so
 
-not_needed/
+.pylintrc
 
 # Distribution / packaging
 .Python

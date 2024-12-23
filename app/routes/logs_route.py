@@ -1,14 +1,13 @@
 from flask import Blueprint, request, jsonify
 from flask import render_template
-from flask_jwt_extended import  jwt_required
-import json
+from flask_jwt_extended import jwt_required
 from app.decorators import api_key_required
 
 
 logs_bp = Blueprint('logs', __name__)
 
 
-@logs_bp.route('/logs')  
+@logs_bp.route('/logs')
 def logs_page():
     return render_template('logs.html')
 
@@ -21,8 +20,10 @@ def get_logs():
     limit = int(request.args.get('limit', 10))
     from app.database.managers.logs_manager import LogManager
     log_manager = LogManager()
-    logs, total_count = log_manager.get_logs_paginated(date=date, offset=offset, limit=limit)
-    return jsonify({'total': total_count, 'logs': logs})  # Убедитесь, что возвращаете правильный формат
+    logs, total_count = log_manager.get_logs_paginated(
+        date=date, offset=offset, limit=limit)
+    # Убедитесь, что возвращаете правильный формат
+    return jsonify({'total': total_count, 'logs': logs})
 
 
 @logs_bp.route('/api/logs', methods=['GET'])
@@ -33,4 +34,5 @@ def get_logs_api():
     from app.database.managers.logs_manager import LogManager
     log_manager = LogManager()
     logs = log_manager.get_logs(date=date)
-    return jsonify({'logs': logs})  # Убедитесь, что возвращаете правильный формат
+    # Убедитесь, что возвращаете правильный формат
+    return jsonify({'logs': logs})
