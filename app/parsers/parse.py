@@ -117,33 +117,36 @@ def parse_sib_express_response(html, orderno):
     :param orderno: Номер заказа
     :return: JSON-строка с результатами или ошибкой
     """
-
     # Очистка HTML
     cleaned_html = clean_html(html)
     logger.info(
-        f"Сиб-Экспресс. Полученный HTML для order number {
-            orderno}: {cleaned_html}"
-    )
+        f"Сиб-Экспресс. Полученный HTML для заказа {orderno}: {cleaned_html[:500]}")
 
+    # Проверка на отсутствие данных
+    if "Не найдено" in cleaned_html:
+        logger.error(f"Ответ не содержит данных для заказа {orderno}.")
+        return json.dumps({"error": "Order not found"}, ensure_ascii=False)
+
+    # Разбор HTML
     soup = BeautifulSoup(cleaned_html, 'lxml')
 
     # Извлечение заголовка накладной
     header = soup.find('h5', class_='find-header')
-    if header:
-        invoice = header.get_text(strip=True)
-    else:
-        logger.error(
-            f"Не удалось найти заголовок накладной для заказа {orderno}.")
+    if not header:
+        logger.error(f"Не удалось найти заголовок накладной для заказа {
+                     orderno}. HTML: {cleaned_html}")
         return json.dumps({"error": "Invoice header not found"}, ensure_ascii=False)
+
+    invoice = header.get_text(strip=True)
 
     # Извлечение данных из таблицы
     table = soup.find('table', class_='detail-view', id='quick_find')
     if not table:
-        logger.error(f"Таблица с деталями не найдена для заказа {orderno}.")
+        logger.error(f"Таблица с деталями не найдена для заказа {
+                     orderno}. HTML: {cleaned_html}")
         return json.dumps({"error": "Detail table not found"}, ensure_ascii=False)
 
     data = {"invoice": invoice}
-
     rows = table.find_all('tr')
     for row in rows:
         header_cell = row.find('th')
@@ -154,7 +157,5 @@ def parse_sib_express_response(html, orderno):
             data[key] = value
 
     logger.info(
-        f"Сиб-Экспресс. Полученные данные для order number {orderno}: {data}"
-    )
-
+        f"Сиб-Экспресс. Полученные данные для заказа {orderno}: {data}")
     return json.dumps(data, ensure_ascii=False)
