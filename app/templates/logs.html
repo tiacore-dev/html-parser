@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Логи</h2>
 <script src="/static/js/logs.js"></script>
+<h2>Логи</h2>
 
 <div class="container">
     <h1>Логи пользователей</h1>
@@ -20,7 +20,6 @@
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Пользователь</th>
                 <th>Действие</th>
                 <th>Сообщение</th>
                 <th>Дата</th>
@@ -38,6 +37,32 @@
     <button id="next-page" class="btn btn-secondary">Следующая</button>
 </div>
 
+<!-- Стили для обрезки текста -->
+<style>
+    td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+        cursor: pointer;
+    }
+    .expanded {
+        white-space: normal;
+        overflow: visible;
+        max-width: none;
+        word-break: break-word;
+    }
+</style>
 
+<!-- Скрипт для развертывания текста -->
+<script>
+    $(document).on('click', 'td', function() {
+        if ($(this).hasClass('expanded')) {
+            $(this).removeClass('expanded'); // Свернуть
+        } else {
+            $(this).addClass('expanded'); // Развернуть
+        }
+    });
+</script>
 
 {% endblock %}

@@ -134,8 +134,8 @@ def parse_sib_express_response(html, orderno):
     # Извлечение данных из таблицы
     table = soup.find('table', class_='detail-view', id='quick_find')
     if not table:
-        logger.error(f"Таблица с деталями не найдена для заказа {
-                     orderno}. HTML: {cleaned_html}")
+        logger.error(f"""Таблица с деталями не найдена для заказа {
+                     orderno}. HTML: {cleaned_html}""")
         return json.dumps({"error": "Detail table not found"}, ensure_ascii=False)
 
     data = {"invoice": invoice}

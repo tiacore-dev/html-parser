@@ -45,17 +45,30 @@ def sib_express(orderno):
         "tab": "1"
     }
 
+    # Куки
+    cookies = {
+        "_ym_uid": "1734680388574908198",
+        "_ym_d": "1734680388",
+        "_ym_visorc": "w",
+        "_ga_YKHVYXWK0P": "GS1.1.1734680388.1.0.1734680388.0.0.0",
+        "_ym_isad": "2",
+        "_ga": "GA1.2.845727486.1734680388",
+        "_gid": "GA1.2.1752836982.1734680388",
+        "_gat_gtag_UA_69478068_8": "1",
+        "XSRF-TOKEN": "eyJpdiI6IkErVExBZXVMTUtsd21mamdEcjVkemc9PSIsInZhbHVlIjoicXhrS3BJS0hGV2xBR3FkOVRcL09tUm1TNlBqMnVRc0hXSkQxY1wvVDhvT2VDeEN2dGY3Ylwvc1J1eHk4NDFjc0Q2c1VKXC9EY3FOd0RVcDgzSkdOQ3RjVDR3PT0iLCJtYWMiOiI4MjQ1YTFjYWRkZTM3ZjRjMjhhZmZhOTUxYWU2ZDlkNDBiZjU3Njg4YTY0MTY0ZTg1ZDU0NmE1NWVhMDAzOGNkIn0",
+        "sibirskiy_ekspress_session": "eyJpdiI6InlSTVgwQyswTDYrTzYwMFM3NndcL29nPT0iLCJ2YWx1ZSI6Ik0xVHVkdCtOT2JtZEVMRldSc0Jmb0dwRFhCcGVOeCt2akVRSm4xandkcit5VzRXNWpnQ2JoVE5ybms2UWp4WmVzdENVOVVveklKWk45NWp1THcxYkVnPT0iLCJtYWMiOiI2YmMzZGVlZWQwZjFhMmEyYTg4YjMwY2Q4NmQ4YzgyM2QwNjkyOGE2NGZjNjRhMzA0ZWVjMzczYmZkZGY1ODRkIn0"
+    }
+
+    # Удаляем лишние пробелы и переносы строк из значений куков
+    cleaned_cookies = {key: value.strip().replace("\n", "")
+                       for key, value in cookies.items()}
+
     # Заголовки запроса
     headers = {
         "Accept": "*/*",
         "Accept-Language": "en-US,en;q=0.9,ru;q=0.8,it;q=0.7",
         "Connection": "keep-alive",
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "Cookie": "_ym_uid=1734680388574908198; _ym_d=1734680388; _ym_visorc=w; "
-                  "_ga_YKHVYXWK0P=GS1.1.1734680388.1.0.1734680388.0.0.0; _ym_isad=2; "
-                  "_ga=GA1.2.845727486.1734680388; _gid=GA1.2.1752836982.1734680388; "
-                  "_gat_gtag_UA_69478068_8=1; XSRF-TOKEN=eyJpdiI6IkErVExBZXVMTUtsd21mamdEcjVkemc9PSIsInZhbHVlIjoicXhrS3BJS0hGV2xBR3FkOVRcL09tUm1TNlBqMnVRc0hXSkQxY1wvVDhvT2VDeEN2dGY3Ylwvc1J1eHk4NDFjc0Q2c1VKXC9EY3FOd0RVcDgzSkdOQ3RjVDR3PT0iLCJtYWMiOiI4MjQ1YTFjYWRkZTM3ZjRjMjhhZmZhOTUxYWU2ZDlkNDBiZjU3Njg4YTY0MTY0ZTg1ZDU0NmE1NWVhMDAzOGNkIn0%3D; "
-                  "sibirskiy_ekspress_session=eyJpdiI6InlSTVgwQyswTDYrTzYwMFM3NndcL29nPT0iLCJ2YWx1ZSI6Ik0xVHVkdCtOT2JtZEVMRldSc0Jmb0dwRFhCcGVOeCt2akVRSm4xandkcit5VzRXNWpnQ2JoVE5ybms2UWp4WmVzdENVOVVveklKWk45NWp1THcxYkVnPT0iLCJtYWMiOiI2YmMzZGVlZWQwZjFhMmEyYTg4YjMwY2Q4NmQ4YzgyM2QwNjkyOGE2NGZjNjRhMzA0ZWVjMzczYmZkZGY1ODRkIn0%3D",
         "Origin": "https://www.sib-express.ru",
         "Referer": "https://www.sib-express.ru/tracker",
         "Sec-Fetch-Dest": "empty",
@@ -72,7 +85,8 @@ def sib_express(orderno):
     session = requests.Session()
 
     try:
-        response = session.post(url, data=data, headers=headers, timeout=30)
+        response = session.post(
+            url, data=data, headers=headers, cookies=cleaned_cookies, timeout=30)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
         logger.error(f"Request failed for order {orderno}: {e}")
