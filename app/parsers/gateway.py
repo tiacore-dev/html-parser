@@ -13,7 +13,7 @@ logger = logging.getLogger('parser')
 partners = {
     "sp_service_tyumen": "26d49356-559c-11eb-80ef-74d43522d93b",
     "sp_service_ekaterinburg": "1d4be527-c61e-11e7-9bdb-74d43522d93b",
-    "syb_express": "33c8793d-96c2-11e7-b541-00252274a609",
+    "sib_express": "33c8793d-96c2-11e7-b541-00252274a609",
     "rasstoyaniya_net": "b3116f3b-9f4a-11e7-a536-00252274a609"
 }
 

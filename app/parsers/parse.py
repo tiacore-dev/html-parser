@@ -73,9 +73,13 @@ def parse_sp_service_response(html, orderno, region_name):
         logger.info(
             f"СП-Сервис {region_name}. Полученный HTML для order number {orderno}: {cleaned_html}")
         soup = BeautifulSoup(cleaned_html, 'lxml')
+        all_tables = soup.find_all('table')
+        logger.debug(f"""Найденные таблицы: {
+                     [str(table)[:200] for table in all_tables]}""")
 
         # Попробуем найти таблицу с данными
-        table = soup.find('table', class_='table-striped')
+        table = soup.find('table', class_=lambda x: x and 'table-striped' in x)
+
         if not table:
             logger.error(
                 f"Таблица с деталями не найдена для заказа {orderno}.")
