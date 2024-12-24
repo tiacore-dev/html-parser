@@ -37,13 +37,10 @@ def sib_express(orderno):
     :return: JSON-строка с результатами или ошибкой
     """
     url = os.getenv('URL_SIB_EXPRESS')
-    if not url:
-        logger.error("URL_SIB_EXPRESS не установлен в переменных окружения.")
-        return json.dumps({"error": "URL_SIB_EXPRESS not set"}, ensure_ascii=False)
 
     # Параметры формы
     data = {
-        "_token": os.getenv('TOKEN_SIB_EXPRESS'),  # Токен CSRF
+        "_token": "DqWfhwtTs2c7bGb1eaHf9dymfkSNpfsiNeAhQgbC",  # Токен CSRF
         "name": orderno,
         "tab": "1"
     }
@@ -54,7 +51,11 @@ def sib_express(orderno):
         "Accept-Language": "en-US,en;q=0.9,ru;q=0.8,it;q=0.7",
         "Connection": "keep-alive",
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "Cookie": os.getenv('COOKIES_SIB_EXPRESS'),
+        "Cookie": "_ym_uid=1734680388574908198; _ym_d=1734680388; _ym_visorc=w; "
+                  "_ga_YKHVYXWK0P=GS1.1.1734680388.1.0.1734680388.0.0.0; _ym_isad=2; "
+                  "_ga=GA1.2.845727486.1734680388; _gid=GA1.2.1752836982.1734680388; "
+                  "_gat_gtag_UA_69478068_8=1; XSRF-TOKEN=eyJpdiI6IkErVExBZXVMTUtsd21mamdEcjVkemc9PSIsInZhbHVlIjoicXhrS3BJS0hGV2xBR3FkOVRcL09tUm1TNlBqMnVRc0hXSkQxY1wvVDhvT2VDeEN2dGY3Ylwvc1J1eHk4NDFjc0Q2c1VKXC9EY3FOd0RVcDgzSkdOQ3RjVDR3PT0iLCJtYWMiOiI4MjQ1YTFjYWRkZTM3ZjRjMjhhZmZhOTUxYWU2ZDlkNDBiZjU3Njg4YTY0MTY0ZTg1ZDU0NmE1NWVhMDAzOGNkIn0%3D; "
+                  "sibirskiy_ekspress_session=eyJpdiI6InlSTVgwQyswTDYrTzYwMFM3NndcL29nPT0iLCJ2YWx1ZSI6Ik0xVHVkdCtOT2JtZEVMRldSc0Jmb0dwRFhCcGVOeCt2akVRSm4xandkcit5VzRXNWpnQ2JoVE5ybms2UWp4WmVzdENVOVVveklKWk45NWp1THcxYkVnPT0iLCJtYWMiOiI2YmMzZGVlZWQwZjFhMmEyYTg4YjMwY2Q4NmQ4YzgyM2QwNjkyOGE2NGZjNjRhMzA0ZWVjMzczYmZkZGY1ODRkIn0%3D",
         "Origin": "https://www.sib-express.ru",
         "Referer": "https://www.sib-express.ru/tracker",
         "Sec-Fetch-Dest": "empty",
@@ -68,20 +69,11 @@ def sib_express(orderno):
         "sec-ch-ua-platform": "\"Windows\""
     }
 
-    # Проверка наличия необходимых куки и токена
-    if not os.getenv('COOKIES_SIB_EXPRESS'):
-        logger.error(
-            "COOKIES_SIB_EXPRESS не установлены в переменных окружения.")
-        return json.dumps({"error": "COOKIES_SIB_EXPRESS not set"}, ensure_ascii=False)
-
-    if not os.getenv('TOKEN_SIB_EXPRESS'):
-        logger.error("TOKEN_SIB_EXPRESS не установлен в переменных окружения.")
-        return json.dumps({"error": "TOKEN_SIB_EXPRESS not set"}, ensure_ascii=False)
-
     session = requests.Session()
 
     try:
-        response = make_post_request(session, url, data=data, headers=headers)
+        response = session.post(url, data=data, headers=headers, timeout=30)
+        response.raise_for_status()
     except requests.exceptions.RequestException as e:
         logger.error(f"Request failed for order {orderno}: {e}")
         return json.dumps({"error": str(e)}, ensure_ascii=False)

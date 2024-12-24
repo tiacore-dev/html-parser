@@ -46,9 +46,6 @@ def sp_service_tyumen(orderno):
     :return: JSON-строка с результатами или ошибкой
     """
     url = os.getenv('URL_TYUMEN')
-    if not url:
-        logger.error("URL_TYUMEN не установлен в переменных окружения.")
-        return json.dumps({"error": "URL_TYUMEN not set"}, ensure_ascii=False)
 
     # Параметры запроса
     params = {
@@ -61,7 +58,6 @@ def sp_service_tyumen(orderno):
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,"
                   "image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
         "accept-language": "en-US,en;q=0.9,ru;q=0.8,it;q=0.7",
-        "cookie": os.getenv('COOKIES_TYUMEN'),
         "priority": "u=0, i",
         "referer": f"https://home.courierexe.ru/178/tracking?orderno={orderno}&singlebutton=submit",
         "sec-ch-ua": "\"Google Chrome\";v=\"131\", \"Chromium\";v=\"131\", \"Not_A Brand\";v=\"24\"",
@@ -73,19 +69,21 @@ def sp_service_tyumen(orderno):
         "sec-fetch-user": "?1",
         "upgrade-insecure-requests": "1",
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                      "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+                      "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
     }
 
-    # Проверка наличия необходимых куки
-    if not os.getenv('COOKIES_TYUMEN'):
-        logger.error("COOKIES_TYUMEN не установлены в переменных окружения.")
-        return json.dumps({"error": "COOKIES_TYUMEN not set"}, ensure_ascii=False)
+    # Куки непосредственно в запросе
+    cookies = {
+        "PHPSESSID": "pd0apr1en20lsphs6r2f5ghp6r",
+        "_csrf": "f1dcfc532e329c03f9464faf503cc8315d80ff1b7306197c20e7bbccf0369106a:2:{i:0;s:5:\"_csrf\";i:1;s:32:\"YWMCORltU4wwvVINjaVnH9qJv2RxieQD\";}"
+    }
 
     session = requests.Session()
 
     try:
-        response = make_request(
-            session, url, method='GET', params=params, headers=headers)
+        response = session.get(
+            url, params=params, headers=headers, cookies=cookies, timeout=30)
+        response.raise_for_status()
     except requests.exceptions.RequestException as e:
         logger.error(f"Request failed for order {orderno}: {e}")
         return json.dumps({"error": str(e)}, ensure_ascii=False)

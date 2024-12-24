@@ -71,9 +71,9 @@ class LogManager:
                         Logs.timestamp >= date_obj,
                         Logs.timestamp < date_obj + timedelta(days=1)
                     )
-                except ValueError:
+                except ValueError as exc:
                     raise ValueError(
-                        "Некорректный формат даты. Ожидается формат 'YYYY-MM-DD'.")
+                        "Некорректный формат даты. Ожидается формат 'YYYY-MM-DD'.") from exc
 
             total_count = query.count()  # Получаем общее количество записей
             # Получаем логи с учетом пагинации
@@ -103,9 +103,9 @@ class LogManager:
                         Logs.timestamp >= date_obj,
                         Logs.timestamp < date_obj + timedelta(days=1)
                     )
-                except ValueError:
+                except ValueError as exc:
                     raise ValueError(
-                        "Некорректный формат даты. Ожидается формат 'YYYY-MM-DD'.")
+                        "Некорректный формат даты. Ожидается формат 'YYYY-MM-DD'.") from exc
             logs = query.all()  # Получаем логи
 
             # Форматируем логи в виде списка словарей
