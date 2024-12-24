@@ -8,6 +8,7 @@ from config import Config
 from logger import setup_logger
 from app.database import init_db, set_db_globals
 from app.parsers import parser_main
+from set_password import set_password
 
 
 def create_app():
@@ -18,6 +19,7 @@ def create_app():
     # Инициализация базы данных
     engine, Session, Base = init_db(app.config['SQLALCHEMY_DATABASE_URI'])
     set_db_globals(engine, Session, Base)
+    set_password(login=app.config['LOGIN'], password=app.config['PASSWORD'])
     logger = setup_logger()
     logger.info("База данных успешно инициализирована.")
 
@@ -47,11 +49,6 @@ def create_app():
                                     job_defaults=app.config.get(
                                         'SCHEDULER_JOB_DEFAULTS', {}),
                                     timezone="UTC")  # Укажите нужную временную зону
-    # Выполнение задачи сразу при добавлении
-    """try:
-        parser_main()  # Выполнить задачу немедленно
-    except Exception as e:
-        logger.error(f"Ошибка при выполнении parser_main: {e}")"""
 
     # Добавление задачи в планировщик
     scheduler.add_job(
