@@ -57,7 +57,10 @@ class UserManager:
         try:
             exists_query = session.query(
                 exists().where(User.login == username)).scalar()
-            return exists_query
+            if exists_query:
+                return True
+            else:
+                return False
         except Exception as e:
             session.rollback()
             print(f"Ошибка при поиске пользователя: {e}")

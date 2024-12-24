@@ -17,23 +17,32 @@ def logout():
     return jsonify({"msg": "Logout successful"}), 200
 
 
-# Маршрут для входа (авторизации)
 @login_bp.route('/auth', methods=['POST'])
 def auth():
     from app.database.managers.user_manager import UserManager
-    # Создаем экземпляр менеджера базы данных
     db = UserManager()
-    login = request.json.get("login", None)
-    password = request.json.get("password", None)
 
-    # Проверяем пользователя в базе данных
-    if not db.user_exists(login) or not db.check_password(login, password):
-        return {"msg": "Bad username or password"}, 401
-    # Генерируем Access и Refresh токены с дополнительной информацией
-    access_token = create_access_token(identity=login)
-    refresh_token = create_refresh_token(identity=login)
+    try:
+        # Получаем данные из запроса
+        login = request.json.get("login", None)
+        password = request.json.get("password", None)
 
-    return jsonify(access_token=access_token, refresh_token=refresh_token), 200
+        if not login or not password:
+            return {"msg": "Login and password are required"}, 400
+
+        # Проверяем пользователя в базе данных
+        if not db.user_exists(login) or not db.check_password(login, password):
+            return {"msg": "Bad username or password"}, 401
+
+        # Генерируем Access и Refresh токены
+        access_token = create_access_token(identity=login)
+        refresh_token = create_refresh_token(identity=login)
+
+        return jsonify(access_token=access_token, refresh_token=refresh_token), 200
+
+    except Exception as e:
+        print(f"Ошибка авторизации: {e}")
+        return {"msg": "Internal server error"}, 500
 
 
 @login_bp.route('/refresh', methods=['POST'])
