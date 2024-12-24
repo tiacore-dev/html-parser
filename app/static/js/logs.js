@@ -39,8 +39,8 @@ $(document).ready(function() {
     
         // Формируем URL для запроса
         const url = userId && userId.trim() !== '' ? 
-            `/api/logs?user_id=${userId}&date=${date}&offset=${offset}&limit=${limit}` : 
-            `/api/logs?date=${date}&offset=${offset}&limit=${limit}`;
+            `/client/logs?user_id=${userId}&date=${date}&offset=${offset}&limit=${limit}` : 
+            `/client/logs?date=${date}&offset=${offset}&limit=${limit}`;
     
         $.ajax({
             url: url,

@@ -68,45 +68,37 @@ def parse_sp_service_response(html, orderno, region_name):
     :param region_name: Название региона для логирования
     :return: JSON-строка с результатами или ошибкой
     """
+    try:
+        cleaned_html = clean_html(html)
+        logger.info(
+            f"СП-Сервис {region_name}. Полученный HTML для order number {orderno}: {cleaned_html}")
+        soup = BeautifulSoup(cleaned_html, 'lxml')
 
-    # Очистка HTML
-    cleaned_html = clean_html(html)
-    logger.info(
-        f"СП-Сервис {region_name}. Полученный HTML для order number {orderno}: {cleaned_html}"
-    )
-    soup = BeautifulSoup(cleaned_html, 'lxml')
+        # Попробуем найти таблицу с данными
+        table = soup.find('table', class_='table-striped')
+        if not table:
+            logger.error(
+                f"Таблица с деталями не найдена для заказа {orderno}.")
+            return json.dumps({"error": "Detail table not found"}, ensure_ascii=False)
 
-    # Извлечение заголовка накладной (если есть)
-    header = soup.find('h5', class_='find-header')
-    if header:
-        invoice = header.get_text(strip=True)
-    else:
-        invoice = None  # Возможно, заголовок отсутствует
+        data = {}
+        rows = table.find_all('tr')
+        for row in rows:
+            header_cell = row.find('td')  # Используем <td> для первой ячейки
+            data_cell = row.find_all('td')[1] if len(
+                row.find_all('td')) > 1 else None
+            if header_cell and data_cell:
+                key = header_cell.get_text(strip=True).rstrip(':')
+                value = data_cell.get_text(strip=True)
+                data[key] = value
 
-    # Извлечение данных из таблицы
-    table = soup.find('table', class_='detail-view', id='quick_find')
-    if not table:
-        logger.error(f"Таблица с деталями не найдена для заказа {orderno}.")
-        return json.dumps({"error": "Detail table not found"}, ensure_ascii=False)
+        logger.info(
+            f"СП-Сервис {region_name}. Полученные данные для order number {orderno}: {data}")
+        return json.dumps(data, ensure_ascii=False)
 
-    data = {}
-    if invoice:
-        data["invoice"] = invoice
-
-    rows = table.find_all('tr')
-    for row in rows:
-        header_cell = row.find('th')
-        data_cell = row.find('td')
-        if header_cell and data_cell:
-            key = header_cell.get_text(strip=True).rstrip(':')
-            value = data_cell.get_text(strip=True)
-            data[key] = value
-
-    logger.info(
-        f"СП-Сервис {region_name}. Полученные данные для order number {orderno}: {data}"
-    )
-
-    return json.dumps(data, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Ошибка при обработке заказа {orderno}: {e}")
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
 
 
 def parse_sib_express_response(html, orderno):
@@ -133,8 +125,8 @@ def parse_sib_express_response(html, orderno):
     # Извлечение заголовка накладной
     header = soup.find('h5', class_='find-header')
     if not header:
-        logger.error(f"Не удалось найти заголовок накладной для заказа {
-                     orderno}. HTML: {cleaned_html}")
+        logger.error(f"""Не удалось найти заголовок накладной для заказа {
+                     orderno}. HTML: {cleaned_html}""")
         return json.dumps({"error": "Invoice header not found"}, ensure_ascii=False)
 
     invoice = header.get_text(strip=True)

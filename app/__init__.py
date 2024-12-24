@@ -47,6 +47,11 @@ def create_app():
                                     job_defaults=app.config.get(
                                         'SCHEDULER_JOB_DEFAULTS', {}),
                                     timezone="UTC")  # Укажите нужную временную зону
+    # Выполнение задачи сразу при добавлении
+    try:
+        parser_main()  # Выполнить задачу немедленно
+    except Exception as e:
+        logger.error(f"Ошибка при выполнении parser_main: {e}")
 
     # Добавление задачи в планировщик
     scheduler.add_job(
@@ -59,12 +64,7 @@ def create_app():
 
     # Запуск планировщика
     scheduler.start()
-    logger.info("Планировщик задач APScheduler успешно запущен.")
 
-    # Обеспечение корректного завершения планировщика при остановке приложения
-    @app.teardown_appcontext
-    def shutdown_scheduler(exception=None):  # pylint: disable=unused-argument
-        scheduler.shutdown(wait=False)
-        logger.info("Планировщик задач APScheduler успешно остановлен.")
+    logger.info("Планировщик задач APScheduler успешно запущен.")
 
     return app
