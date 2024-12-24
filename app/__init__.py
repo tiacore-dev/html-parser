@@ -42,10 +42,10 @@ def create_app():
         logger.error(f"Ошибка при регистрации маршрутов: {e}")
         raise
 
-    try:
+    """try:
         parser_main()  # Выполнить задачу немедленно
     except Exception as e:
-        logger.error(f'Ошибка при выполнении parser_main: {e}')
+        logger.error(f'Ошибка при выполнении parser_main: {e}')"""
 
     # Инициализация и настройка планировщика
     scheduler = BackgroundScheduler(jobstores=app.config.get('SCHEDULER_JOBSTORES', {}),
