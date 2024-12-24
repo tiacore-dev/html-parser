@@ -7,7 +7,7 @@ from app.decorators import api_key_required
 logs_bp = Blueprint('logs', __name__)
 
 
-@logs_bp.route('/logs')
+@logs_bp.route('/')
 def logs_page():
     return render_template('logs.html')
 
