@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import exists
+# from sqlalchemy import exists
 from app.database.models import User
 from app.database.db_globals import Session
 
@@ -55,12 +55,10 @@ class UserManager:
         """Проверка существования пользователя по имени"""
         session = self.Session()
         try:
+            # Используем SELECT COUNT для более надежной проверки
             exists_query = session.query(
-                exists().where(User.login == username)).scalar()
-            if exists_query:
-                return True
-            else:
-                return False
+                User).filter_by(login=username).first()
+            return exists_query is not None
         except Exception as e:
             session.rollback()
             print(f"Ошибка при поиске пользователя: {e}")
