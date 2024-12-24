@@ -48,10 +48,10 @@ def create_app():
                                         'SCHEDULER_JOB_DEFAULTS', {}),
                                     timezone="UTC")  # Укажите нужную временную зону
     # Выполнение задачи сразу при добавлении
-    try:
+    """try:
         parser_main()  # Выполнить задачу немедленно
     except Exception as e:
-        logger.error(f"Ошибка при выполнении parser_main: {e}")
+        logger.error(f"Ошибка при выполнении parser_main: {e}")"""
 
     # Добавление задачи в планировщик
     scheduler.add_job(
