@@ -1,16 +1,11 @@
 import logging
-from flask import Blueprint, jsonify, render_template
+from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 # Получаем логгер по его имени
 logger = logging.getLogger('parser')
 
 account_bp = Blueprint('account', __name__)
-
-
-@account_bp.route('/', methods=['GET'])
-def account():
-    return render_template('account.html')
 
 
 @account_bp.route('/protected', methods=['GET'])
