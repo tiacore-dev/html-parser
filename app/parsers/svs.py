@@ -7,28 +7,58 @@ from dotenv import load_dotenv
 load_dotenv()
 logger = logging.getLogger('parser')
 
+# Установка уровня логирования
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 token = os.getenv('TOKEN')
 user_key = os.getenv('USER_KEY')
 
 
 def get_orders(customer):
+    """
+    Получение заказов для указанного клиента.
+
+    :param customer: Имя клиента
+    :return: JSON-ответ с заказами или ошибка
+    """
     url = os.getenv('URL_SVS_GET')
     data = {
         "customer": customer
     }
     headers = {
-        "Content-Type": "application/json",
-        # Исправление ошибки в названии ключа:
-        "Content": "application/json"
+        "Content-Type": "application/json"
     }
-    response = requests.post(url, headers=headers, json=data, timeout=300)
-    return response.json()
+
+    try:
+        response = requests.post(url, headers=headers, json=data, timeout=300)
+        response.raise_for_status()
+        logger.info(f"Успешно получены заказы для клиента {customer}.")
+        return response.json()
+    except requests.exceptions.Timeout:
+        logger.error(
+            f"Превышено время ожидания при запросе заказов для клиента {customer}.")
+        return {"error": "Timeout error"}
+    except requests.exceptions.RequestException as e:
+        logger.error(f"""Ошибка запроса при получении заказов для клиента {
+                     customer}: {e}""")
+        return {"error": str(e)}
+    except json.JSONDecodeError as e:
+        logger.error(f"Ошибка декодирования JSON для клиента {customer}: {e}")
+        return {"error": "Invalid JSON response"}
 
 
 def set_orders(info, order_id):
+    """
+    Установка статуса заказа.
+
+    :param info: Информация о заказе (дата, получатель)
+    :param order_id: Идентификатор заказа
+    :return: None
+    """
     url = os.getenv('URL_SVS_SET')
     headers = {
-        "content-type": "application/json"
+        "Content-Type": "application/json"
     }
     data = {
         "auth_token": {
@@ -40,7 +70,19 @@ def set_orders(info, order_id):
         "recName": info['receipient'],
         "comment": ""
     }
-    request = requests.post(url, headers=headers,
-                            json=json.dumps(data), timeout=300)
-    logger.info(f'''Статус запроса к SVS на установку статуса "Доставлено": {
-                request.status_code}''')
+
+    try:
+        response = requests.post(url, headers=headers, json=data, timeout=300)
+        response.raise_for_status()
+        logger.info(
+            f"Успешно установлен статус 'Доставлено' для заказа {order_id}.")
+        logger.info(f"Ответ сервера: {response.status_code}, {response.text}")
+    except requests.exceptions.Timeout:
+        logger.error(
+            f"Превышено время ожидания при установке статуса для заказа {order_id}.")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"""Ошибка запроса при установке статуса для заказа {
+                     order_id}: {e}""")
+    except json.JSONDecodeError as e:
+        logger.error(f"""Ошибка декодирования JSON ответа при установке статуса для заказа {
+                     order_id}: {e}""")
