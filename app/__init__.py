@@ -9,6 +9,7 @@ from logger import setup_logger
 from app.database import init_db, set_db_globals
 from app.parsers import parser_main
 from set_password import set_password
+import logging
 
 
 def create_app():
@@ -20,32 +21,27 @@ def create_app():
     engine, Session, Base = init_db(app.config['SQLALCHEMY_DATABASE_URI'])
     set_db_globals(engine, Session, Base)
     set_password(login=app.config['LOGIN'], password=app.config['PASSWORD'])
-    logger = setup_logger()
-    logger.info("База данных успешно инициализирована.")
+
+    logging.info("База данных успешно инициализирована.")
 
     # Инициализация JWT
     try:
         JWTManager(app)
-        logger.info(f"""JWT инициализирован. Срок действия токенов: {
-                    app.config['JWT_ACCESS_TOKEN_EXPIRES']}""")
+        logging.info(f"""JWT инициализирован. Срок действия токенов: {
+            app.config['JWT_ACCESS_TOKEN_EXPIRES']}""")
     except Exception as e:
-        logger.error(f"Ошибка при инициализации JWT: {e}")
+        logging.error(f"Ошибка при инициализации JWT: {e}")
         raise
 
     from app.routes import register_routes
     # Регистрация маршрутов
     try:
         register_routes(app)
-        logger.info("Маршруты успешно зарегистрированы.",
-                    extra={'user_id': 'init'})
+        logging.info("Маршруты успешно зарегистрированы.",
+                     extra={'user_id': 'init'})
     except Exception as e:
-        logger.error(f"Ошибка при регистрации маршрутов: {e}")
+        logging.error(f"Ошибка при регистрации маршрутов: {e}")
         raise
-
-    """try:
-        parser_main()  # Выполнить задачу немедленно
-    except Exception as e:
-        logger.error(f'Ошибка при выполнении parser_main: {e}')"""
 
     # Инициализация и настройка планировщика
     scheduler = BackgroundScheduler(jobstores=app.config.get('SCHEDULER_JOBSTORES', {}),
@@ -67,6 +63,6 @@ def create_app():
     # Запуск планировщика
     scheduler.start()
 
-    logger.info("Планировщик задач APScheduler успешно запущен.")
-
+    logging.info("Планировщик задач APScheduler успешно запущен.")
+    setup_logger()
     return app
