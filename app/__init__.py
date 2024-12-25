@@ -22,13 +22,13 @@ def create_app():
     set_db_globals(engine, Session, Base)
     set_password(login=app.config['LOGIN'], password=app.config['PASSWORD'])
 
-    logging.info("База данных успешно инициализирована.")
+    # logging.info("База данных успешно инициализирована.")
 
     # Инициализация JWT
     try:
         JWTManager(app)
-        logging.info(f"""JWT инициализирован. Срок действия токенов: {
-            app.config['JWT_ACCESS_TOKEN_EXPIRES']}""")
+        # logging.info(f"""JWT инициализирован. Срок действия токенов: {
+        # app.config['JWT_ACCESS_TOKEN_EXPIRES']}""")
     except Exception as e:
         logging.error(f"Ошибка при инициализации JWT: {e}")
         raise
@@ -37,8 +37,8 @@ def create_app():
     # Регистрация маршрутов
     try:
         register_routes(app)
-        logging.info("Маршруты успешно зарегистрированы.",
-                     extra={'user_id': 'init'})
+        # logging.info("Маршруты успешно зарегистрированы.",
+        # extra={'user_id': 'init'})
     except Exception as e:
         logging.error(f"Ошибка при регистрации маршрутов: {e}")
         raise
@@ -63,6 +63,6 @@ def create_app():
     # Запуск планировщика
     scheduler.start()
 
-    logging.info("Планировщик задач APScheduler успешно запущен.")
+    # logging.info("Планировщик задач APScheduler успешно запущен.")
     setup_logger()
     return app
