@@ -48,15 +48,13 @@ $(document).ready(function () {
     });
 
     function loadLogs() {
-        const userId = $('#user').val();
-        const date = $('#date').val();
-        const searchText = $('#search-text').val();
+        const userId = $('#user').val(); // Если используется ID пользователя
+        const date = $('#date').val(); // Получаем значение даты
+        const searchText = $('#search-text').val(); // Получаем текст поиска
     
-        // Обновленный URL для API
+        // Формируем URL для API-запроса
         let url = `/logs/api?offset=${offset}&limit=${limit}`;
-        if (userId && userId.trim() !== '') {
-            url += `&user_id=${userId}`;
-        }
+
         if (date) {
             url += `&date=${date}`;
         }
@@ -64,12 +62,19 @@ $(document).ready(function () {
             url += `&search=${encodeURIComponent(searchText)}`;
         }
     
+        // Обновляем URL в браузере (без API в строке)
         if (window.history && window.history.pushState) {
-            history.pushState(null, '', `/logs/?offset=${offset}&limit=${limit}`); // Обновляем URL без API
+            let displayUrl = `/logs/?offset=${offset}&limit=${limit}`;
+            if (date) displayUrl += `&date=${date}`;
+            if (searchText && searchText.trim() !== '') {
+                displayUrl += `&search=${encodeURIComponent(searchText)}`;
+            }
+            history.pushState(null, '', displayUrl);
         }
     
         $('#logs-table-body').empty();
     
+        // Выполняем запрос к API
         $.ajax({
             url: url,
             type: 'GET',
@@ -102,6 +107,7 @@ $(document).ready(function () {
             }
         });
     }
+    
     
     
     function renderPagination() {
