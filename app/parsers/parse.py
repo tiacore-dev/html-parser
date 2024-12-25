@@ -16,37 +16,45 @@ def parse_rasstoyaniya_net_response(html, orderno):
     :param orderno: Номер заказа
     :return: JSON-строка с результатами или ошибкой
     """
-    soup = BeautifulSoup(html, 'lxml')
+    cleaned_html = clean_html(html)
+    logger.info(
+        f"Расстояния.нет. Полученный HTML для order number {orderno}: {cleaned_html}")
+    try:
+        soup = BeautifulSoup(cleaned_html, 'lxml')
 
-    # Извлечение заголовка накладной
-    header = soup.find('h5', class_='find-header')
-    if header:
-        invoice = header.get_text(strip=True)
-    else:
-        logger.error(
-            f"Не удалось найти заголовок накладной для заказа {orderno}.")
-        return json.dumps({"error": "Invoice header not found"}, ensure_ascii=False)
+        # Извлечение заголовка накладной
+        header = soup.find('h5', class_='find-header')
+        if header:
+            invoice = header.get_text(strip=True)
+        else:
+            logger.error(
+                f"Расстояния.нет. Не удалось найти заголовок накладной для заказа {orderno}.")
+            return json.dumps({"error": "Invoice header not found"}, ensure_ascii=False)
 
-    # Извлечение данных из таблицы
-    table = soup.find('table', class_='detail-view', id='quick_find')
-    if not table:
-        logger.error(f"Таблица с деталями не найдена для заказа {orderno}.")
-        return json.dumps({"error": "Detail table not found"}, ensure_ascii=False)
+        # Извлечение данных из таблицы
+        table = soup.find('table', class_='detail-view', id='quick_find')
+        if not table:
+            logger.error(
+                f"Таблица с деталями не найдена для заказа {orderno}.")
+            return json.dumps({"error": "Detail table not found"}, ensure_ascii=False)
 
-    data = {"invoice": invoice}
+        data = {"invoice": invoice}
 
-    rows = table.find_all('tr')
-    for row in rows:
-        header_cell = row.find('th')
-        data_cell = row.find('td')
-        if header_cell and data_cell:
-            key = header_cell.get_text(strip=True).rstrip(':')
-            value = data_cell.get_text(strip=True)
-            data[key] = value
+        rows = table.find_all('tr')
+        for row in rows:
+            header_cell = row.find('th')
+            data_cell = row.find('td')
+            if header_cell and data_cell:
+                key = header_cell.get_text(strip=True).rstrip(':')
+                value = data_cell.get_text(strip=True)
+                data[key] = value
 
-    logger.info(f"""Расстояния.нет. Полученные данные для заказа {
-                orderno}: {data}""")
-    return json.dumps(data, ensure_ascii=False)
+        logger.info(f"""Расстояния.нет. Полученные данные для заказа {
+                    orderno}: {data}""")
+        return json.dumps(data, ensure_ascii=False)
+    except Exception as e:
+        logger.error(f"Ошибка при обработке заказа {orderno}: {e}")
+        return {"error": str(e)}
 
 
 def parse_sp_service_response(html, orderno, region_name):
