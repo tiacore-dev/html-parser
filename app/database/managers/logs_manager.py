@@ -74,7 +74,10 @@ class LogManager:
                     )
                 except ValueError as exc:
                     raise ValueError(
-                        "Некорректный формат даты. Ожидается формат 'YYYY-MM-DD'.") from exc
+                        "Некорректный формат даты. Ожидается формат 'YYYY-MM-DD'."
+                    ) from exc
+
+            # Фильтрация по тексту поиска
             if search:
                 query = query.filter(
                     or_(
@@ -82,6 +85,7 @@ class LogManager:
                         Logs.action.ilike(f"%{search}%")
                     )
                 )
+
             # Фильтрация по ключевым словам
             if keywords:
                 keyword_conditions = [
@@ -93,16 +97,20 @@ class LogManager:
                 ]
                 query = query.filter(and_(*keyword_conditions))
 
-                total_count = query.count()  # Получаем общее количество записей
-                # Получаем логи с учетом пагинации
-                logs = query.offset(offset).limit(limit).all()
+            # Получаем общее количество записей
+            total_count = query.count()
 
-                # Форматируем логи в виде списка словарей
-                result = [log.to_dict() for log in logs] if logs else []
-                return result, total_count
+            # Получаем логи с учетом пагинации
+            logs = query.offset(offset).limit(limit).all()
+
+            # Форматируем логи в виде списка словарей
+            result = [log.to_dict() for log in logs] if logs else []
+            return result, total_count
+
         except Exception as e:
             print(f"Ошибка при получении логов с пагинацией: {e}")
-            return [], 0
+            return [], 0  # Возвращаем пустой список и 0 вместо None
+
         finally:
             session.close()
 
