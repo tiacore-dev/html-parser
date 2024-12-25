@@ -48,9 +48,10 @@ $(document).ready(function () {
     });
 
     function loadLogs() {
-        const date = $('#date').val();
-        const searchText = $('#search-text').val();
-
+        const date = $('#date').val(); // Получаем значение даты
+        const searchText = $('#search-text').val(); // Получаем текст поиска
+        const keywords = $('#keywords').val(); // Получаем ключевые слова
+    
         // Формируем URL для API-запроса
         let url = `/logs/api?offset=${offset}&limit=${limit}`;
         if (date) {
@@ -59,7 +60,10 @@ $(document).ready(function () {
         if (searchText && searchText.trim() !== '') {
             url += `&search=${encodeURIComponent(searchText)}`;
         }
-
+        if (keywords && keywords.trim() !== '') {
+            url += `&keywords=${encodeURIComponent(keywords)}`; // Передаем ключевые слова
+        }
+    
         // Обновляем URL в браузере (без API в строке)
         if (window.history && window.history.pushState) {
             let displayUrl = `/logs/?offset=${offset}&limit=${limit}`;
@@ -67,11 +71,14 @@ $(document).ready(function () {
             if (searchText && searchText.trim() !== '') {
                 displayUrl += `&search=${encodeURIComponent(searchText)}`;
             }
+            if (keywords && keywords.trim() !== '') {
+                displayUrl += `&keywords=${encodeURIComponent(keywords)}`;
+            }
             history.pushState(null, '', displayUrl);
         }
-
+    
         $('#logs-table-body').empty();
-
+    
         // Выполняем запрос к API
         $.ajax({
             url: url,
@@ -82,7 +89,7 @@ $(document).ready(function () {
             success: function (response) {
                 totalLogs = response.total;
                 totalPages = Math.ceil(totalLogs / limit);
-
+    
                 if (totalLogs === 0) {
                     $('#logs-table-body').append('<tr><td colspan="4">Логи не найдены по заданным критериям.</td></tr>');
                 } else {
@@ -97,7 +104,7 @@ $(document).ready(function () {
                         $('#logs-table-body').append(row);
                     });
                 }
-
+    
                 renderPagination();
             },
             error: function (xhr, status, error) {
@@ -105,6 +112,7 @@ $(document).ready(function () {
             }
         });
     }
+    
 
     function renderPagination() {
         const pagination = $('#pagination');

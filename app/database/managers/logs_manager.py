@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime
 from app.database.models import Logs
 from app.database.db_globals import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 
 
 class LogManager:
@@ -57,7 +57,7 @@ class LogManager:
         finally:
             session.close()
 
-    def get_logs_paginated(self, date=None, search=None, offset=0, limit=10):
+    def get_logs_paginated(self, date=None, search=None, keywords=None, offset=0, limit=10):
         """Получение логов с фильтрацией и пагинацией."""
         session = self.Session()
         try:
@@ -82,13 +82,24 @@ class LogManager:
                         Logs.action.ilike(f"%{search}%")
                     )
                 )
-            total_count = query.count()  # Получаем общее количество записей
-            # Получаем логи с учетом пагинации
-            logs = query.offset(offset).limit(limit).all()
+            # Фильтрация по ключевым словам
+            if keywords:
+                keyword_conditions = [
+                    or_(
+                        Logs.message.ilike(f"%{kw}%"),
+                        Logs.action.ilike(f"%{kw}%")
+                    )
+                    for kw in keywords
+                ]
+                query = query.filter(and_(*keyword_conditions))
 
-            # Форматируем логи в виде списка словарей
-            result = [log.to_dict() for log in logs] if logs else []
-            return result, total_count
+                total_count = query.count()  # Получаем общее количество записей
+                # Получаем логи с учетом пагинации
+                logs = query.offset(offset).limit(limit).all()
+
+                # Форматируем логи в виде списка словарей
+                result = [log.to_dict() for log in logs] if logs else []
+                return result, total_count
         except Exception as e:
             print(f"Ошибка при получении логов с пагинацией: {e}")
             return [], 0
