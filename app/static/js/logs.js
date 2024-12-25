@@ -37,11 +37,20 @@ $(document).ready(function() {
     function loadLogs() {
         const userId = $('#user').val(); 
         const date = $('#date').val(); 
-
-        const url = userId && userId.trim() !== '' ? 
-            `/client/logs?user_id=${userId}&date=${date}&offset=${offset}&limit=${limit}` : 
-            `/client/logs?date=${date}&offset=${offset}&limit=${limit}`;
-
+        const searchText = $('#search-text').val(); // Получаем текст поиска
+    
+        // Формируем URL с параметром поиска
+        let url = `/client/logs?offset=${offset}&limit=${limit}`;
+        if (userId && userId.trim() !== '') {
+            url += `&user_id=${userId}`;
+        }
+        if (date) {
+            url += `&date=${date}`;
+        }
+        if (searchText && searchText.trim() !== '') {
+            url += `&search=${encodeURIComponent(searchText)}`; // Добавляем текст поиска
+        }
+    
         $.ajax({
             url: url,
             type: 'GET',
@@ -50,10 +59,10 @@ $(document).ready(function() {
             },
             success: function(response) {
                 $('#logs-table-body').empty();
-
+    
                 totalLogs = response.total; 
                 totalPages = Math.ceil(totalLogs / limit);
-
+    
                 if (totalLogs === 0) {
                     $('#logs-table-body').append('<tr><td colspan="5">Логи не найдены.</td></tr>');
                 } else {
@@ -68,7 +77,7 @@ $(document).ready(function() {
                         $('#logs-table-body').append(row);
                     });
                 }
-
+    
                 $('#prev-page').prop('disabled', currentPage === 1);
                 $('#next-page').prop('disabled', currentPage === totalPages);
                 $('#page-info').text(`Страница ${currentPage} из ${totalPages}`);
@@ -78,6 +87,7 @@ $(document).ready(function() {
             }
         });
     }
+    
 
     function savePaginationState() {
         localStorage.setItem('offset', offset);
