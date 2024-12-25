@@ -18,10 +18,11 @@ def get_logs():
     date = request.args.get('date')
     offset = int(request.args.get('offset', 0))
     limit = int(request.args.get('limit', 10))
+    search = request.args.get('search', None)
     from app.database.managers.logs_manager import LogManager
     log_manager = LogManager()
     logs, total_count = log_manager.get_logs_paginated(
-        date=date, offset=offset, limit=limit)
+        date=date, search=search, offset=offset, limit=limit)
     # Убедитесь, что возвращаете правильный формат
     return jsonify({'total': total_count, 'logs': logs})
 

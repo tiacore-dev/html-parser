@@ -41,9 +41,7 @@ $(document).ready(function() {
     
         // Формируем URL с параметром поиска
         let url = `/client/logs?offset=${offset}&limit=${limit}`;
-        if (userId && userId.trim() !== '') {
-            url += `&user_id=${userId}`;
-        }
+
         if (date) {
             url += `&date=${date}`;
         }

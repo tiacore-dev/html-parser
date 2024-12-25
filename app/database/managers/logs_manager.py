@@ -1,6 +1,7 @@
 from datetime import timedelta, datetime
 from app.database.models import Logs
 from app.database.db_globals import Session
+from sqlalchemy import or_
 
 
 class LogManager:
@@ -56,7 +57,7 @@ class LogManager:
         finally:
             session.close()
 
-    def get_logs_paginated(self, date=None, offset=0, limit=10):
+    def get_logs_paginated(self, date=None, search=None, offset=0, limit=10):
         """Получение логов с фильтрацией и пагинацией."""
         session = self.Session()
         try:
@@ -74,7 +75,13 @@ class LogManager:
                 except ValueError as exc:
                     raise ValueError(
                         "Некорректный формат даты. Ожидается формат 'YYYY-MM-DD'.") from exc
-
+            if search:
+                query = query.filter(
+                    or_(
+                        Logs.message.ilike(f"%{search}%"),
+                        Logs.action.ilike(f"%{search}%")
+                    )
+                )
             total_count = query.count()  # Получаем общее количество записей
             # Получаем логи с учетом пагинации
             logs = query.offset(offset).limit(limit).all()
