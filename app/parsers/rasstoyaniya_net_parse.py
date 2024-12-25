@@ -79,7 +79,8 @@ def rasstoyaniya_net(orderno):
             url, data=data, headers=headers, cookies=cookies, timeout=30)
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
-        logger.error(f"Request failed for order {orderno}: {e}")
+        logger.error(f"""Расстояния.нет. Request failed for order {
+                     orderno}: {e}""")
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
     html = response.text
