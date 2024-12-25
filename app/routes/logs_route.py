@@ -7,14 +7,17 @@ from app.decorators import api_key_required
 logs_bp = Blueprint('logs', __name__)
 
 
-@logs_bp.route('/')
+@logs_bp.route('/logs/', methods=['GET'])
 def logs_page():
+    """Рендеринг страницы логов"""
     return render_template('logs.html')
 
 
-@logs_bp.route('/client/logs', methods=['GET'])
+@logs_bp.route('/logs/api', methods=['GET'])
 @jwt_required()
 def get_logs():
+    """API для получения логов"""
+
     date = request.args.get('date')
     offset = int(request.args.get('offset', 0))
     limit = int(request.args.get('limit', 10))
@@ -23,7 +26,6 @@ def get_logs():
     log_manager = LogManager()
     logs, total_count = log_manager.get_logs_paginated(
         date=date, search=search, offset=offset, limit=limit)
-    # Убедитесь, что возвращаете правильный формат
     return jsonify({'total': total_count, 'logs': logs})
 
 

@@ -52,7 +52,8 @@ $(document).ready(function () {
         const date = $('#date').val();
         const searchText = $('#search-text').val();
     
-        let url = `/client/logs?offset=${offset}&limit=${limit}`;
+        // Обновленный URL для API
+        let url = `/logs/api?offset=${offset}&limit=${limit}`;
         if (userId && userId.trim() !== '') {
             url += `&user_id=${userId}`;
         }
@@ -64,7 +65,7 @@ $(document).ready(function () {
         }
     
         if (window.history && window.history.pushState) {
-            history.pushState(null, '', url);
+            history.pushState(null, '', `/logs/?offset=${offset}&limit=${limit}`); // Обновляем URL без API
         }
     
         $('#logs-table-body').empty();
@@ -94,13 +95,14 @@ $(document).ready(function () {
                     });
                 }
     
-                renderPagination(); // Рендерим пагинацию
+                renderPagination();
             },
             error: function (xhr, status, error) {
                 console.error('Ошибка при загрузке логов:', error);
             }
         });
     }
+    
     
     function renderPagination() {
         const pagination = $('#pagination');
