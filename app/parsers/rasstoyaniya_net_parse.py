@@ -82,15 +82,7 @@ def rasstoyaniya_net(orderno):
         logger.error(f"Request failed for order {orderno}: {e}")
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
-    try:
-        response_data = response.json()
-    except json.JSONDecodeError:
-        logger.error(
-            f"Не удалось разобрать JSON-ответ для заказа {orderno}. Ответ: {response.text}")
-        return json.dumps({"error": "Invalid JSON response"}, ensure_ascii=False)
+    html = response.text
 
-    logger.info(f"""Расстояния.нет. Полученные данные для order number {
-                orderno}: {response_data}""")
-
-    # Вызов функции парсинга
-    return parse_rasstoyaniya_net_response(response_data, orderno)
+    # Передача HTML в функцию парсинга
+    return parse_rasstoyaniya_net_response(html, orderno)

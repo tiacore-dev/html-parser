@@ -4,6 +4,7 @@ import os
 import json
 import logging
 import requests
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from app.parsers.parse import parse_sib_express_response
@@ -12,6 +13,14 @@ from app.parsers.parse import parse_sib_express_response
 load_dotenv()
 
 logger = logging.getLogger('parser')
+
+
+def get_csrf_token(session, url):
+    response = session.get(url)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, 'html.parser')
+    csrf_token = soup.find('input', {'name': '_token'})['value']
+    return csrf_token
 
 
 @retry(
@@ -36,14 +45,16 @@ def sib_express(orderno):
     :param orderno: Номер заказа
     :return: JSON-строка с результатами или ошибкой
     """
+    session = requests.Session()
     url = os.getenv('URL_SIB_EXPRESS')
 
     # Параметры формы
     data = {
-        "_token": "DqWfhwtTs2c7bGb1eaHf9dymfkSNpfsiNeAhQgbC",  # Токен CSRF
         "name": orderno,
         "tab": "1"
     }
+    csrf_token = get_csrf_token(session, url)
+    data["_token"] = csrf_token
 
     # Куки
     cookies = {
@@ -81,8 +92,6 @@ def sib_express(orderno):
         "sec-ch-ua-mobile": "?0",
         "sec-ch-ua-platform": "\"Windows\""
     }
-
-    session = requests.Session()
 
     try:
         response = session.post(

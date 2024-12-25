@@ -90,4 +90,9 @@ def sp_service_tyumen(orderno):
 
     html = response.text
 
-    return parse_sp_service_response(html, orderno, 'Тюмень')
+    info = parse_sp_service_response(html, orderno, 'Екатеринбург')
+    result = {
+        "date": f"{info['Date parcel received']} {info['Time parcel received']}",
+        "receipient": f"{info['Delivery info']}"
+    }
+    return result

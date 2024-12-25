@@ -16,15 +16,7 @@ def parse_rasstoyaniya_net_response(html, orderno):
     :param orderno: Номер заказа
     :return: JSON-строка с результатами или ошибкой
     """
-
-    # Очистка HTML
-    cleaned_html = clean_html(html)
-    logger.info(
-        f"Расстояния.нет. Полученный HTML для order number {
-            orderno}: {cleaned_html}"
-    )
-
-    soup = BeautifulSoup(cleaned_html, 'lxml')
+    soup = BeautifulSoup(html, 'lxml')
 
     # Извлечение заголовка накладной
     header = soup.find('h5', class_='find-header')
@@ -52,10 +44,8 @@ def parse_rasstoyaniya_net_response(html, orderno):
             value = data_cell.get_text(strip=True)
             data[key] = value
 
-    logger.info(
-        f"Расстояния.нет. Полученные данные для order number {orderno}: {data}"
-    )
-
+    logger.info(f"""Расстояния.нет. Полученные данные для заказа {
+                orderno}: {data}""")
     return json.dumps(data, ensure_ascii=False)
 
 
@@ -98,11 +88,11 @@ def parse_sp_service_response(html, orderno, region_name):
 
         logger.info(
             f"СП-Сервис {region_name}. Полученные данные для order number {orderno}: {data}")
-        return json.dumps(data, ensure_ascii=False)
+        return data
 
     except Exception as e:
         logger.error(f"Ошибка при обработке заказа {orderno}: {e}")
-        return json.dumps({"error": str(e)}, ensure_ascii=False)
+        return {"error": str(e)}
 
 
 def parse_sib_express_response(html, orderno):
@@ -140,7 +130,7 @@ def parse_sib_express_response(html, orderno):
     if not table:
         logger.error(f"""Таблица с деталями не найдена для заказа {
                      orderno}. HTML: {cleaned_html}""")
-        return json.dumps({"error": "Detail table not found"}, ensure_ascii=False)
+        return {"error": "Detail table not found"}
 
     data = {"invoice": invoice}
     rows = table.find_all('tr')
@@ -154,4 +144,4 @@ def parse_sib_express_response(html, orderno):
 
     logger.info(
         f"Сиб-Экспресс. Полученные данные для заказа {orderno}: {data}")
-    return json.dumps(data, ensure_ascii=False)
+    return data
