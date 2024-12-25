@@ -106,18 +106,46 @@ $(document).ready(function () {
         const pagination = $('#pagination');
         pagination.empty();
     
-        if (totalPages <= 1) return;
+        if (totalPages <= 1) return; // Если страниц <= 1, ничего не отображаем
     
-        for (let page = 1; page <= totalPages; page++) {
-            const isActive = page === currentPage ? 'active' : '';
-            const button = `<button class="btn btn-sm btn-outline-primary ${isActive}" data-page="${page}">
-                                ${page}
-                            </button>`;
-            pagination.append(button);
+        const maxVisiblePages = 3; // Количество страниц вокруг текущей
+        let html = '';
+    
+        // Первая страница
+        if (currentPage > 1) {
+            html += `<button class="btn btn-sm btn-outline-primary" data-page="1">1</button>`;
         }
     
+        // Многоточие перед текущими страницами
+        if (currentPage > maxVisiblePages + 1) {
+            html += `<span class="btn btn-sm disabled">...</span>`;
+        }
+    
+        // Отображение текущей страницы и двух соседних
+        const startPage = Math.max(1, currentPage - maxVisiblePages);
+        const endPage = Math.min(totalPages, currentPage + maxVisiblePages);
+    
+        for (let page = startPage; page <= endPage; page++) {
+            const isActive = page === currentPage ? 'active' : '';
+            html += `<button class="btn btn-sm btn-outline-primary ${isActive}" data-page="${page}">
+                        ${page}
+                    </button>`;
+        }
+    
+        // Многоточие после текущих страниц
+        if (currentPage < totalPages - maxVisiblePages) {
+            html += `<span class="btn btn-sm disabled">...</span>`;
+        }
+    
+        // Последняя страница
+        if (currentPage < totalPages) {
+            html += `<button class="btn btn-sm btn-outline-primary" data-page="${totalPages}">${totalPages}</button>`;
+        }
+    
+        pagination.html(html);
+    
         // Обработчик клика для перехода к нужной странице
-        pagination.find('button').on('click', function () {
+        pagination.find('button[data-page]').on('click', function () {
             const selectedPage = parseInt($(this).data('page'));
             if (selectedPage !== currentPage) {
                 currentPage = selectedPage;
@@ -127,6 +155,7 @@ $(document).ready(function () {
             }
         });
     }
+    
     
 
     setInterval(loadLogs, 60000);
