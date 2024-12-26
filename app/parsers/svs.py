@@ -74,9 +74,11 @@ def set_orders(info, order_id):
     try:
         response = requests.post(url, headers=headers, json=data, timeout=300)
         response.raise_for_status()
-        logger.info(
-            f"Успешно установлен статус 'Доставлено' для заказа {order_id}.")
         logger.info(f"Ответ сервера: {response.status_code}, {response.text}")
+        if response.text.get("error") is False:
+            logger.info(
+                f"Успешно установлен статус 'Доставлено' для заказа {order_id}.")
+
     except requests.exceptions.Timeout:
         logger.error(
             f"Превышено время ожидания при установке статуса для заказа {order_id}.")
