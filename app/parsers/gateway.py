@@ -39,7 +39,7 @@ def parser_main():
                         order_id = order.get('id')
                         set_orders(info, order_id)
                 elif value == "b3116f3b-9f4a-11e7-a536-00252274a609":
-                    if info['Status'] == "Доставлено":
+                    if info['Status'] == "Доставлена":
                         order_id = order.get('id')
                         set_orders(info, order_id)
                         # Здесь вы можете обрабатывать полученную информацию (info) по своему усмотрению
