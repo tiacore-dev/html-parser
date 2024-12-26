@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime
 from app.database.models import Logs
 from app.database.db_globals import Session
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, desc
 
 
 class LogManager:
@@ -96,6 +96,9 @@ class LogManager:
                     for kw in keywords
                 ]
                 query = query.filter(and_(*keyword_conditions))
+
+            # Добавляем сортировку по времени в порядке убывания
+            query = query.order_by(desc(Logs.timestamp))
 
             # Получаем общее количество записей
             total_count = query.count()
