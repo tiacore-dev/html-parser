@@ -33,8 +33,9 @@ def parser_main():
                 continue
             try:
                 info = function(order_number)
-                print(info)
+
                 if value == "26d49356-559c-11eb-80ef-74d43522d93b" or value == "1d4be527-c61e-11e7-9bdb-74d43522d93b":
+                    logger.info(f'Для {key} начата отправка данных в СВС')
                     if info['Status'] == "Delivered":
                         order_id = order.get('id')
                         set_orders(info, order_id)
