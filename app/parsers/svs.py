@@ -78,7 +78,9 @@ def set_orders(info, order_id):
         if response.text.get("error") is False:
             logger.info(
                 f"Успешно установлен статус 'Доставлено' для заказа {order_id}.")
-
+        else:
+            logger.info(
+                f"Не удалось установить статус 'Доставлено' для заказа {order_id}.")
     except requests.exceptions.Timeout:
         logger.error(
             f"Превышено время ожидания при установке статуса для заказа {order_id}.")
