@@ -35,11 +35,14 @@ def parser_main():
                 info = function(order_number)
 
                 if value == "26d49356-559c-11eb-80ef-74d43522d93b" or value == "1d4be527-c61e-11e7-9bdb-74d43522d93b":
-                    logger.info(f'Для {key} начата отправка данных в СВС')
                     if info['Status'] == "Delivered":
                         order_id = order.get('id')
                         set_orders(info, order_id)
-                # Здесь вы можете обрабатывать полученную информацию (info) по своему усмотрению
+                elif value == "b3116f3b-9f4a-11e7-a536-00252274a609":
+                    if info['Status'] == "Доставлено":
+                        order_id = order.get('id')
+                        set_orders(info, order_id)
+                        # Здесь вы можете обрабатывать полученную информацию (info) по своему усмотрению
             except requests.exceptions.ConnectionError as e:
                 logger.error(f"Connection error for order {order_number}: {e}")
                 # Можно реализовать дополнительную обработку, например, сохранить неуспешный заказ для повторной попытки

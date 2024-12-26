@@ -86,4 +86,10 @@ def rasstoyaniya_net(orderno):
     html = response.text
 
     # Передача HTML в функцию парсинга
-    return parse_rasstoyaniya_net_response(html, orderno)
+    info = parse_rasstoyaniya_net_response(html, orderno)
+    result = {
+        "date": f"{info['Дата доставки']}",
+        "receipient": f"{info['Получатель']}",
+        "Status": f"{info['Статус']}"
+    }
+    return result
