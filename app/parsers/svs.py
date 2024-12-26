@@ -61,7 +61,7 @@ def set_orders(info, order_id):
         "Content-Type": "application/json"
     }
     data = {
-        "auth_token": {
+        "authToken": {
             "userkey": f"{user_key}",
             "token": f"{token}"
         },
