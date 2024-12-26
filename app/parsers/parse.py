@@ -107,52 +107,57 @@ def parse_sib_express_response(html, orderno):
     """
     Парсит HTML-ответ сервиса Сиб-Экспресс и извлекает данные из таблицы.
 
-    :param html: HTML-контент
+    :param html: HTML-контент (возможно, закодированный в JSON)
     :param orderno: Номер заказа
     :return: JSON-строка с результатами или ошибкой
     """
-    # Очистка HTML
-    cleaned_html = clean_html(html)
-    logger.info(
-        f"Сиб-Экспресс. Полученный HTML для заказа {orderno}: {cleaned_html}")
-
-    # Проверка на отсутствие данных
-    if "Не найдено" in cleaned_html:
-        logger.error(f"Ответ не содержит данных для заказа {orderno}.")
-        return json.dumps({"error": "Order not found"}, ensure_ascii=False)
     try:
-        # Разбор HTML
-        soup = BeautifulSoup(cleaned_html, 'lxml')
+        # Попытка декодирования JSON
+        response_data = json.loads(html)
+        if "msg" not in response_data:
+            logger.error(
+                f"Поле 'msg' отсутствует в ответе для заказа {orderno}.")
+            return json.dumps({"error": "Invalid response format"}, ensure_ascii=False)
 
-        # Извлечение заголовка накладной
-        header = soup.find('h5', class_='find-header')
-        if not header:
-            logger.error(f"""Не удалось найти заголовок накладной для заказа {
-                orderno}""")
-            return json.dumps({"error": "Invoice header not found"}, ensure_ascii=False)
+        # Извлечение HTML из поля 'msg'
+        raw_html = response_data["msg"]
+        logger.info(
+            f"Сиб-Экспресс. Извлеченный HTML для заказа {orderno}: {raw_html}")
+    except json.JSONDecodeError:
+        logger.error(f"Ответ для заказа {orderno} не является валидным JSON.")
+        return json.dumps({"error": "Invalid JSON response"}, ensure_ascii=False)
 
-        invoice = header.get_text(strip=True)
+    try:
+        # Парсинг HTML
+        soup = BeautifulSoup(raw_html, 'lxml')
+
+        # Проверка на отсутствие данных
+        if "Не найдено" in raw_html:
+            logger.error(f"Ответ не содержит данных для заказа {orderno}.")
+            return json.dumps({"error": "Order not found"}, ensure_ascii=False)
 
         # Извлечение данных из таблицы
-        table = soup.find('table', class_='detail-view', id='quick_find')
-        if not table:
-            logger.error(f"""Таблица с деталями не найдена для заказа {
-                orderno}.""")
-            return {"error": "Detail table not found"}
+        data = {}
 
-        data = {"invoice": invoice}
-        rows = table.find_all('tr')
-        for row in rows:
-            header_cell = row.find('th')
-            data_cell = row.find('td')
-            if header_cell and data_cell:
-                key = header_cell.get_text(strip=True).rstrip(':')
-                value = data_cell.get_text(strip=True)
-                data[key] = value
+        # Поиск таблицы или строки с информацией
+        table = soup.find('table')
+        if table:
+            rows = table.find_all('tr')
+            for row in rows:
+                cells = row.find_all('td')
+                if len(cells) == 2:
+                    key = cells[0].get_text(strip=True)
+                    value = cells[1].get_text(strip=True)
+                    data[key] = value
+        else:
+            logger.error(
+                f"Таблица с деталями не найдена для заказа {orderno}.")
+            return json.dumps({"error": "Detail table not found"}, ensure_ascii=False)
 
+        # Логирование и возврат результата
         logger.info(
             f"Сиб-Экспресс. Полученные данные для заказа {orderno}: {data}")
-        return data
+        return json.dumps(data, ensure_ascii=False)
     except Exception as e:
         logger.error(f"Ошибка при обработке заказа {orderno}: {e}")
-        return {"error": str(e)}
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
