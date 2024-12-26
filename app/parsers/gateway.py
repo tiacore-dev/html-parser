@@ -6,7 +6,7 @@ from app.parsers.sp_service_ekaterinburg_parse import sp_service_ekaterinburg  #
 from app.parsers.rasstoyaniya_net_parse import rasstoyaniya_net  # pylint: disable=unused-import
 from app.parsers.sib_express_parse import sib_express  # pylint: disable=unused-import
 from app.parsers.svs import get_orders, set_orders
-# Получаем логгер по его имени
+
 logger = logging.getLogger('parser')
 
 
@@ -38,11 +38,17 @@ def parser_main():
                     if info['Status'] == "Delivered":
                         order_id = order.get('id')
                         set_orders(info, order_id)
+
                 elif value == "b3116f3b-9f4a-11e7-a536-00252274a609":
                     if info['Status'] == "Доставлена" or info['Status'] == "Доставлено":
                         order_id = order.get('id')
                         set_orders(info, order_id)
-                        # Здесь вы можете обрабатывать полученную информацию (info) по своему усмотрению
+
+                elif value == "33c8793d-96c2-11e7-b541-00252274a609":
+                    if info['Status'] == "Доставлено":
+                        order_id = order.get('id')
+                        set_orders(info, order_id)
+
             except requests.exceptions.ConnectionError as e:
                 logger.error(f"Connection error for order {order_number}: {e}")
                 # Можно реализовать дополнительную обработку, например, сохранить неуспешный заказ для повторной попытки

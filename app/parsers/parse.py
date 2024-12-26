@@ -152,12 +152,12 @@ def parse_sib_express_response(html, orderno):
         else:
             logger.error(
                 f"Таблица с деталями не найдена для заказа {orderno}.")
-            return json.dumps({"error": "Detail table not found"}, ensure_ascii=False)
+            return {"error": "Detail table not found"}
 
         # Логирование и возврат результата
         logger.info(
             f"Сиб-Экспресс. Полученные данные для заказа {orderno}: {data}")
-        return json.dumps(data, ensure_ascii=False)
+        return data
     except Exception as e:
         logger.error(f"Ошибка при обработке заказа {orderno}: {e}")
-        return json.dumps({"error": str(e)}, ensure_ascii=False)
+        return {"error": str(e)}
