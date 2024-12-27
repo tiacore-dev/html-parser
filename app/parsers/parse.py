@@ -36,7 +36,7 @@ def parse_rasstoyaniya_net_response(html, orderno):
         if not table:
             logger.error(
                 f"Таблица с деталями не найдена для заказа {orderno}.")
-            return json.dumps({"error": "Detail table not found"}, ensure_ascii=False)
+            return {"error": "Detail table not found"}
 
         data = {"invoice": invoice}
 
@@ -51,7 +51,7 @@ def parse_rasstoyaniya_net_response(html, orderno):
 
         logger.info(f"""Расстояния.нет. Полученные данные для заказа {
                     orderno}: {data}""")
-        return json.dumps(data, ensure_ascii=False)
+        return data
     except Exception as e:
         logger.error(f"Ошибка при обработке заказа {orderno}: {e}")
         return {"error": str(e)}
