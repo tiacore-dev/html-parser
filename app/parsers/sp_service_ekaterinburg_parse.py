@@ -86,7 +86,7 @@ def sp_service_ekaterinburg(orderno):
     html = response.text
 
     info = parse_sp_service_response(html, orderno, 'Екатеринбург')
-    if info:
+    if info and info['Date parcel received']:
         result = {
             "date": f"{info['Date parcel received']} {info['Time parcel received']}",
             "receipient": f"{info['Delivery info']}",
