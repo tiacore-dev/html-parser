@@ -105,12 +105,15 @@ def sib_express(orderno):
 
     # Вызов функции парсинга
     info = parse_sib_express_response(html, orderno)
-    for key, value in info.items():
-        rec = value.split(' ')
-        result = {
-            "date": f"{key}",
-            "receipient": f"{rec[2]}",
-            "Status": f"{rec[0]}"
-        }
+    if info:
+        for key, value in info.items():
+            rec = value.split(' ')
+            result = {
+                "date": f"{key}",
+                "receipient": f"{rec[2]}",
+                "Status": f"{rec[0]}"
+            }
+    else:
+        result = None
 
     return result
