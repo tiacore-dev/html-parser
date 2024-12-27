@@ -48,7 +48,7 @@ def get_orders(customer):
         return {"error": "Invalid JSON response"}
 
 
-def set_orders(info, order_id):
+def set_orders(info, order_id, key):
     """
     Установка статуса заказа.
 
@@ -74,19 +74,20 @@ def set_orders(info, order_id):
     try:
         response = requests.post(url, headers=headers, json=data, timeout=300)
         response.raise_for_status()
-        logger.info(f"Ответ сервера: {response.status_code}, {response.text}")
+        logger.info(f"""{key}.Ответ сервера: {
+                    response.status_code}, {response.text}""")
         if response.text.get("error") is False:
             logger.info(
-                f"Успешно установлен статус 'Доставлено' для заказа {order_id}.")
+                f"Успешно установлен статус 'Доставлено' для заказа {order_id} для сервиса {key}.")
         else:
             logger.info(
-                f"Не удалось установить статус 'Доставлено' для заказа {order_id}.")
+                f"Не удалось установить статус 'Доставлено' для заказа {order_id} для сервиса {key}.")
     except requests.exceptions.Timeout:
         logger.error(
-            f"Превышено время ожидания при установке статуса для заказа {order_id}.")
+            f"Превышено время ожидания при установке статуса для заказа {order_id} для сервиса {key}.")
     except requests.exceptions.RequestException as e:
         logger.error(f"""Ошибка запроса при установке статуса для заказа {
                      order_id}: {e}""")
     except json.JSONDecodeError as e:
         logger.error(f"""Ошибка декодирования JSON ответа при установке статуса для заказа {
-                     order_id}: {e}""")
+                     order_id} для сервиса {key}: {e}""")
