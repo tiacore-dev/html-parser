@@ -110,7 +110,7 @@ def sib_express(orderno):
             rec = value.split(' ')
             result = {
                 "date": f"{key}",
-                "receipient": f"{rec[2]}",
+                "receipient": f"{rec[2]}" if rec[2] else rec[1],
                 "Status": f"{rec[0]}"
             }
     else:
