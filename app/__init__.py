@@ -57,7 +57,9 @@ def create_app():
         trigger=IntervalTrigger(hours=2),
         id='parser_main_job',
         name='Выполнение parser_main каждые 2 часа',
-        replace_existing=True
+        replace_existing=True,
+        max_instances=3,  # Разрешаем до 3 одновременно выполняющихся задач
+        misfire_grace_time=3600  # Разрешаем выполнить пропущенные задачи в течение 1 часа
     )
 
     # Запуск планировщика
