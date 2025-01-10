@@ -109,9 +109,9 @@ def sib_express(orderno):
         for key, value in info.items():
             rec = value.split(' ')
             result = {
-                "date": f"{key}",
-                "receipient": f"{rec[2]}" if rec[2] else rec[1],
-                "Status": f"{rec[0]}"
+                "date": key,
+                "receipient": rec[2] if len(rec) > 2 else (rec[1] if len(rec) > 1 else None),
+                "Status": rec[0] if len(rec) > 0 else None
             }
     else:
         result = None
