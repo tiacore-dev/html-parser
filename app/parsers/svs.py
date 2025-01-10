@@ -48,7 +48,7 @@ def get_orders(customer):
         return {"error": "Invalid JSON response"}
 
 
-def set_orders(info, order_id, key):
+def set_orders(info, order_id, name):
     """
     Установка статуса заказа.
 
@@ -60,6 +60,7 @@ def set_orders(info, order_id, key):
     headers = {
         "Content-Type": "application/json"
     }
+
     data = {
         "authToken": {
             "userkey": f"{user_key}",
@@ -68,13 +69,13 @@ def set_orders(info, order_id, key):
         "parcelId": f"{order_id}",
         "recDate": info['date'],
         "recName": info['receipient'],
-        "comment": ""
+        "comment": name
     }
 
     try:
         response = requests.post(url, headers=headers, json=data, timeout=300)
         response.raise_for_status()
-        logger.info(f"""{key}.Ответ сервера: {
+        logger.info(f"""{name}.Ответ сервера: {
                     response.status_code}, {response.text}""")
         if response.text.get("error") is False:
             logger.info(

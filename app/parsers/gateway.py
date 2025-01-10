@@ -34,20 +34,29 @@ def parser_main():
             try:
                 info = function(order_number)
                 if info:
-                    if value == "26d49356-559c-11eb-80ef-74d43522d93b" or value == "1d4be527-c61e-11e7-9bdb-74d43522d93b":
+                    if value == "26d49356-559c-11eb-80ef-74d43522d93b":
                         if info['Status'] == "Delivered":
                             order_id = order.get('id')
-                            set_orders(info, order_id, key)
+                            name = "СП-Сервис Тюмень"
+                            set_orders(info, order_id, name)
+
+                    elif value == "1d4be527-c61e-11e7-9bdb-74d43522d93b":
+                        if info['Status'] == "Delivered":
+                            order_id = order.get('id')
+                            name = "СП-Сервис Екатеринбург"
+                            set_orders(info, order_id, name)
 
                     elif value == "b3116f3b-9f4a-11e7-a536-00252274a609":
                         if info['Status'] == "Доставлена" or info['Status'] == "Доставлено":
                             order_id = order.get('id')
-                            set_orders(info, order_id, key)
+                            name = "Расстояния нет"
+                            set_orders(info, order_id, name)
 
                     elif value == "33c8793d-96c2-11e7-b541-00252274a609":
                         if info['Status'] == "Доставлено":
                             order_id = order.get('id')
-                            set_orders(info, order_id, key)
+                            name = "Сибирский Экспресс"
+                            set_orders(info, order_id, name)
 
             except requests.exceptions.ConnectionError as e:
                 logger.error(f"Connection error for order {order_number}: {e}")
