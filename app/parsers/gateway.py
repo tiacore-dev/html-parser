@@ -5,7 +5,8 @@ from app.parsers.sp_service_tyumen_parse import sp_service_tyumen  # pylint: dis
 from app.parsers.sp_service_ekaterinburg_parse import sp_service_ekaterinburg  # pylint: disable=unused-import
 from app.parsers.rasstoyaniya_net_parse import rasstoyaniya_net  # pylint: disable=unused-import
 from app.parsers.sib_express_parse import sib_express  # pylint: disable=unused-import
-from app.parsers.post_master_parse import post_master, extract_delivered_info
+from app.parsers.post_master_parse import post_master, extract_delivered_info_master  # pylint: disable=unused-import
+from app.parsers.plex_post_parse import plex_post, extract_delivered_info_plex  # pylint: disable=unused-import
 from app.parsers.svs import get_orders, set_orders
 
 logger = logging.getLogger('parser')
@@ -17,7 +18,7 @@ partners = {
     "sib_express": "33c8793d-96c2-11e7-b541-00252274a609",
     "rasstoyaniya_net": "b3116f3b-9f4a-11e7-a536-00252274a609",
     "post_master": "1034e0be-855a-11ea-80dd-74d43522d93b",
-    "pleks_post": "d56a2a0c-6339-11e8-80b5-74d43522d93b",
+    "plex_post": "d56a2a0c-6339-11e8-80b5-74d43522d93b",
     "vip_mail_ufa": "90b470a2-a775-11e7-ad08-74d43522d93b"
 }
 
@@ -93,10 +94,17 @@ def parser_main():
                             set_orders(result, order_id, name)
 
                     elif value == "1034e0be-855a-11ea-80dd-74d43522d93b":
-                        result = extract_delivered_info(info)
+                        result = extract_delivered_info_master(info)
                         if result:
                             order_id = order.get('id')
                             name = "Пост Мастер"
+                            set_orders(result, order_id, name)
+
+                    elif value == "d56a2a0c-6339-11e8-80b5-74d43522d93b":
+                        result = extract_delivered_info_plex(info)
+                        if result:
+                            order_id = order.get('id')
+                            name = "Плекс Пост"
                             set_orders(result, order_id, name)
 
             except requests.exceptions.ConnectionError as e:

@@ -1,10 +1,15 @@
 import logging
+import os
 import requests
+from dotenv import load_dotenv
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('parser')
+
+# Загрузка переменных окружения
+load_dotenv()
 
 
 @retry(
@@ -19,7 +24,7 @@ def make_request(orderno):
     :param order_id: Номер заказа
     :return: Данные заказа в формате JSON
     """
-    url = "https://www.post-master.ru/calc/db_api.php"
+    url = os.getenv('URL_POST_MASTER')
     headers = {
         "accept": "*/*",
         "accept-language": "en-US,en;q=0.9,ru;q=0.8,it;q=0.7",
@@ -30,10 +35,6 @@ def make_request(orderno):
                       "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
         "x-requested-with": "XMLHttpRequest"
     }
-    # data = {
-    #    "command": "track_orders",
-    #    "order_id[]": orderno
-    # }
 
     data = f"command=track_orders&order_id%5B%5D={orderno}"
     response = requests.post(url, headers=headers, data=data, timeout=30)
@@ -72,7 +73,7 @@ def post_master(orderno):
         return None
 
 
-def extract_delivered_info(order_data):
+def extract_delivered_info_master(order_data):
     """
     Извлекает информацию о доставленных заказах.
 

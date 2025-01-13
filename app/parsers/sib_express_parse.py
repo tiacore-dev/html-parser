@@ -6,7 +6,6 @@ import logging
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from app.parsers.parse import parse_sib_express_response
 
 # Загрузка переменных окружения
@@ -21,21 +20,6 @@ def get_csrf_token(session, url):
     soup = BeautifulSoup(response.text, 'html.parser')
     csrf_token = soup.find('input', {'name': '_token'})['value']
     return csrf_token
-
-
-@retry(
-    retry=retry_if_exception_type(requests.exceptions.ConnectionError),
-    wait=wait_exponential(multiplier=1, min=4, max=10),
-    stop=stop_after_attempt(5),
-    reraise=True
-)
-def make_post_request(session, url, data, headers):
-    """
-    Отправляет POST-запрос с использованием сессии, применяет повторные попытки при ошибках подключения.
-    """
-    response = session.post(url, data=data, headers=headers, timeout=30)
-    response.raise_for_status()
-    return response
 
 
 def sib_express(orderno):
