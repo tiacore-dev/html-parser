@@ -79,16 +79,16 @@ def set_orders(info, order_id, name):
                     response.status_code}, {response.text}""")
         if response.text.get("error") is False:
             logger.info(
-                f"Успешно установлен статус 'Доставлено' для заказа {order_id} для сервиса {key}.")
+                f"Успешно установлен статус 'Доставлено' для заказа {order_id} для сервиса {name}.")
         else:
             logger.info(
-                f"Не удалось установить статус 'Доставлено' для заказа {order_id} для сервиса {key}.")
+                f"Не удалось установить статус 'Доставлено' для заказа {order_id} для сервиса {name}.")
     except requests.exceptions.Timeout:
         logger.error(
-            f"Превышено время ожидания при установке статуса для заказа {order_id} для сервиса {key}.")
+            f"Превышено время ожидания при установке статуса для заказа {order_id} для сервиса {name}.")
     except requests.exceptions.RequestException as e:
         logger.error(f"""Ошибка запроса при установке статуса для заказа {
                      order_id}: {e}""")
     except json.JSONDecodeError as e:
         logger.error(f"""Ошибка декодирования JSON ответа при установке статуса для заказа {
-                     order_id} для сервиса {key}: {e}""")
+                     order_id} для сервиса {name}: {e}""")

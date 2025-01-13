@@ -33,30 +33,66 @@ def parser_main():
                 continue
             try:
                 info = function(order_number)
+
                 if info:
+
                     if value == "26d49356-559c-11eb-80ef-74d43522d93b":
-                        if info['Status'] == "Delivered":
+                        if info and info['Date parcel received']:
+                            result = {
+                                "date": f"{info['Date parcel received']} {info['Time parcel received']}",
+                                "receipient": f"{info['Delivery info']}",
+                                "Status": info['Status']
+                            }
+                        else:
+                            result = None
+                        if result['Status'] == "Delivered":
                             order_id = order.get('id')
                             name = "СП-Сервис Тюмень"
-                            set_orders(info, order_id, name)
+                            set_orders(result, order_id, name)
 
                     elif value == "1d4be527-c61e-11e7-9bdb-74d43522d93b":
-                        if info['Status'] == "Delivered":
+                        if info and info['Date parcel received']:
+                            result = {
+                                "date": f"{info['Date parcel received']} {info['Time parcel received']}",
+                                "receipient": f"{info['Delivery info']}",
+                                "Status": info['Status']
+                            }
+                        else:
+                            result = None
+                        if result['Status'] == "Delivered":
                             order_id = order.get('id')
                             name = "СП-Сервис Екатеринбург"
-                            set_orders(info, order_id, name)
+                            set_orders(result, order_id, name)
 
                     elif value == "b3116f3b-9f4a-11e7-a536-00252274a609":
-                        if info['Status'] == "Доставлена" or info['Status'] == "Доставлено":
+                        if info:
+                            result = {
+                                "date": f"{info['Дата доставки']}",
+                                "receipient": f"{info['Получатель']}",
+                                "Status": f"{info['Статус']}"
+                            }
+                        else:
+                            result = None
+                        if result['Status'] == "Доставлена" or result['Status'] == "Доставлено":
                             order_id = order.get('id')
                             name = "Расстояния нет"
-                            set_orders(info, order_id, name)
+                            set_orders(result, order_id, name)
 
                     elif value == "33c8793d-96c2-11e7-b541-00252274a609":
-                        if info['Status'] == "Доставлено":
+                        if info:
+                            for key, value in info.items():
+                                rec = value.split(' ')
+                                result = {
+                                    "date": key,
+                                    "receipient": rec[2] if len(rec) > 2 else (rec[1] if len(rec) > 1 else None),
+                                    "Status": rec[0] if len(rec) > 0 else None
+                                }
+                        else:
+                            result = None
+                        if result['Status'] == "Доставлено":
                             order_id = order.get('id')
                             name = "Сибирский Экспресс"
-                            set_orders(info, order_id, name)
+                            set_orders(result, order_id, name)
 
             except requests.exceptions.ConnectionError as e:
                 logger.error(f"Connection error for order {order_number}: {e}")

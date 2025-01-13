@@ -87,13 +87,5 @@ def rasstoyaniya_net(orderno):
 
     # Передача HTML в функцию парсинга
     info = parse_rasstoyaniya_net_response(html, orderno)
-    if info:
-        result = {
-            "date": f"{info['Дата доставки']}",
-            "receipient": f"{info['Получатель']}",
-            "Status": f"{info['Статус']}"
-        }
-    else:
-        result = None
 
-    return result
+    return info
