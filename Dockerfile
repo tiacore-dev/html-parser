@@ -11,26 +11,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     gnupg \
     firefox-esr \
+    xvfb \
+    libnss3 \
+    libxss1 \
+    libasound2 \
+    libgtk-3-0 \
+    libdbus-glib-1-2 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Устанавливаем Geckodriver
-RUN GECKODRIVER_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/') && \
-    wget -q https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz && \
-    tar -xvzf geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz && \
+# Устанавливаем GeckoDriver
+RUN GECKODRIVER_VERSION="v0.33.0" && \
+    wget -q "https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz" && \
+    tar -xzf "geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz" && \
+    rm "geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz" && \
     mv geckodriver /usr/local/bin/ && \
-    chmod +x /usr/local/bin/geckodriver && \
-    rm geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz
+    chmod +x /usr/local/bin/geckodriver
 
 # Устанавливаем Python-зависимости
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Устанавливаем Gunicorn
-RUN pip install gunicorn
-
-# Копируем весь код приложения в рабочую директорию
+# Копируем код приложения
 COPY . .
 
-# Указываем переменную окружения для headless режима
-ENV DISPLAY=:99
+

@@ -14,11 +14,10 @@ url = os.getenv('URL_VIP_MAIL_UFA')
 
 
 def create_firefox_driver():
-    options = Options()
-    options.headless = True  # Запуск браузера в headless-режиме
     try:
+        options = Options()
+        options.headless = True  # Headless-режим
         driver = webdriver.Firefox(options=options)
-        logger.info("Браузер Firefox успешно создан.")
         return driver
     except Exception as e:
         logger.error(f"Ошибка при создании драйвера Firefox: {e}")

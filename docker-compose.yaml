@@ -11,13 +11,12 @@ services:
     environment:
       - HTTP_PROXY=
       - HTTPS_PROXY=
+      - DISPLAY=:99  # Переменная окружения для Xvfb
     volumes:
       - .:/app
-    command: gunicorn -c gunicorn.conf.py run:app
+    command: sh -c "Xvfb :99 -screen 0 1920x1080x24 & gunicorn -c gunicorn.conf.py run:app"
     networks:
       - parser_network
-
-
 
 networks:
   parser_network:
