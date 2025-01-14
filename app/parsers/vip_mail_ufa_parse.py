@@ -61,43 +61,6 @@ def track_package(tracking_number):
         driver.quit()
 
 
-"""def get_initial_session():
-    session = requests.Session()
-    response = session.get(url)
-    response.raise_for_status()
-
-    soup = BeautifulSoup(response.text, "html.parser")
-
-    # Извлекаем `sessid` и `PARAMS_HASH`
-    sessid = soup.find("input", {"name": "sessid"}).get("value")
-    params_hash = soup.find("input", {"name": "PARAMS_HASH"}).get("value")
-
-    logging.info(f"Получены sessid: {sessid}, PARAMS_HASH: {params_hash}")
-    return session, sessid, params_hash
-
-
-def track_package_session(session, sessid, params_hash, number):
-    data = {
-        "sessid": sessid,
-        "number": number,
-        "PARAMS_HASH": params_hash,
-        "submit": "Отправить",
-    }
-
-    headers = {
-        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-        "content-type": "application/x-www-form-urlencoded",
-        "referer": url,
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    }
-
-    response = session.post(url, headers=headers, data=data)
-    response.raise_for_status()
-    return response.text
-
-"""
-
-
 def make_request(orderno):
     """
     Отправляет запрос к API и возвращает HTML-ответ.
@@ -105,15 +68,11 @@ def make_request(orderno):
     :return: HTML-контент ответа
     """
     try:
-        # Шаг 1: Получение сессии
-        # session, sessid, params_hash = get_initial_session()
 
         # Отправляем запрос на отслеживание
         tracking_html = track_package(orderno)
         logging.info("Получены данные отслеживания.")
 
-        # html_response = response.text
-        # decoded_html = decode_response_content(response)
         logging.info(f"""ВипМайл Уфа. Ответ сервера для заказа {
                      orderno}: {tracking_html}""")
         return tracking_html  # Возвращаем HTML
@@ -125,7 +84,6 @@ def make_request(orderno):
 def vip_mail_ufa(orderno):
     try:
         response = make_request(orderno)
-        # info = parse_vip_mail_ufa(response, orderno)
         return response
     except Exception as e:
         logging.error(f'ВипМайл Уфа. Ошибка при выполнении парсинга: {e}')

@@ -170,31 +170,3 @@ def parse_plex_post(html, orderno):
     except Exception as e:
         logger.error(f"Ошибка при парсинге HTML: {e}")
         return []
-
-
-"""
-def parse_vip_mail_ufa(html, orderno):
-    try:
-        soup = BeautifulSoup(html, "html.parser")
-        # Находим таблицу с данными
-        table = soup.find("table", class_="show_tracks")
-        if not table:
-            logger.error("Таблица с информацией об отслеживании не найдена.")
-            return []
-
-        rows = table.find("tbody").find_all("tr")  # Извлекаем строки таблицы
-        events = []
-        for row in rows:
-            cols = row.find_all("td")  # Разбиваем строки на столбцы
-            if len(cols) >= 3:
-                date = cols[0].get_text(strip=True)
-                status = cols[1].get_text(strip=True)
-                notes = cols[2].get_text(strip=True)
-                events.append(
-                    {"Дата": date, "Статус": status, "Примечания": notes})
-
-        return events
-    except Exception as e:
-        logger.error(
-            f"ВипМайл Уфа. Ошибка при парсинге HTML для заказа {orderno}: {e}")
-        return []"""
