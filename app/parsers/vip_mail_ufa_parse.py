@@ -56,7 +56,7 @@ def track_package(tracking_number):
         return results
     except Exception as e:
         logger.error(f"""ВипМайл Уфа. Ошибка при парсинге для заказа: {
-                     tracking_number}""")
+                     tracking_number}: {e}""")
     finally:
         driver.quit()
 
