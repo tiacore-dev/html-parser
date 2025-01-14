@@ -1,8 +1,9 @@
+
 import logging
 import os
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 import requests
@@ -14,15 +15,17 @@ logger = logging.getLogger('parser')
 
 url = os.getenv('URL_VIP_MAIL_UFA')
 
-options = Options()
-options.add_argument('--headless')
-options.add_argument('--no-sandbox')
-options.add_argument('--disable-dev-shm-usage')
+
+def create_firefox_driver():
+    options = Options()
+    options.headless = True  # Запуск браузера в headless-режиме
+    driver = webdriver.Firefox(options=options)
+    return driver
 
 
 def track_package(tracking_number):
     # Настройка Selenium
-    driver = webdriver.Chrome(options=options)  # Или другой драйвер
+    driver = create_firefox_driver()
     driver.get(url)
 
     try:
