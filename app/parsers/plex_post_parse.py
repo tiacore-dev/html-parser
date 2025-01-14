@@ -9,6 +9,8 @@ from app.parsers.parse import parse_plex_post
 # Загрузка переменных окружения
 load_dotenv()
 
+logger = logging.getLogger('parser')
+
 
 def send_request(order_code):
     url = os.getenv('URL_PLEX_POST')
@@ -33,6 +35,7 @@ def send_request(order_code):
     try:
         response = requests.post(
             url, params=params, headers=headers, data=data, timeout=30)
+
         # Байты в строку
         response_str = response.content.decode('utf-8')
 

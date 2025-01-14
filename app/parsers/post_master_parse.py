@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 # Настройка логирования
-logging.basicConfig(level=logging.INFO)
+
 logger = logging.getLogger('parser')
 
 # Загрузка переменных окружения
@@ -50,7 +50,8 @@ def post_master(orderno):
     """
     try:
         response = make_request(orderno)
-        # logger.info(f"Полученные данные для заказа {orderno}: {response}")
+        logger.info(f"""Пост Мастер. Полученные данные для заказа {
+                    orderno}: {response}""")
         info = {"order_id": orderno, "entries": []}
         # Обработка данных из JSON
         if isinstance(response, list):
@@ -63,13 +64,15 @@ def post_master(orderno):
                     "Статус": entry.get("VPOINT"),
                 }
                 info["entries"].append(order_entry)
+            logger.info(f"Пост Мастер. Распарсенные данные: {info}")
             return info
         else:
-            logger.error(f"""Н""еожиданный формат ответа для заказа {
+            logger.error(f"""Пост Мастер.Неожиданный формат ответа для заказа {
                          orderno}: {response}""")
             return None
     except Exception as e:
-        logger.error(f"Ошибка при обработке заказа {orderno}: {e}")
+        logger.error(f"""Пост Мастер. Ошибка при обработке заказа {
+                     orderno}: {e}""")
         return None
 
 
