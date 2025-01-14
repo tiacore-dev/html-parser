@@ -1,4 +1,3 @@
-
 import logging
 import os
 from selenium.webdriver.support import expected_conditions as EC
@@ -6,45 +5,52 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium import webdriver
-import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
 logger = logging.getLogger('parser')
-
 url = os.getenv('URL_VIP_MAIL_UFA')
 
 
 def create_firefox_driver():
     options = Options()
     options.headless = True  # Запуск браузера в headless-режиме
-    driver = webdriver.Firefox(options=options)
-    return driver
+    try:
+        driver = webdriver.Firefox(options=options)
+        logger.info("Браузер Firefox успешно создан.")
+        return driver
+    except Exception as e:
+        logger.error(f"Ошибка при создании драйвера Firefox: {e}")
+        raise
 
 
 def track_package(tracking_number):
-    # Настройка Selenium
     driver = create_firefox_driver()
     driver.get(url)
 
     try:
-        # Найти поле для ввода номера накладной
+        logger.info("Страница успешно открыта.")
+
+        # Вводим номер накладной
         number_field = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.NAME, "number"))
         )
         number_field.send_keys(tracking_number)
+        logger.info(f"Номер накладной {tracking_number} введен.")
 
-        # Нажать кнопку "Отправить"
+        # Нажимаем кнопку "Отправить"
         submit_button = driver.find_element(By.NAME, "submit")
         submit_button.click()
+        logger.info("Кнопка отправки нажата.")
 
-        # Дождаться таблицы с результатами
+        # Ждем появления таблицы с результатами
         table = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CLASS_NAME, "show_tracks"))
         )
+        logger.info("Таблица с результатами успешно найдена.")
 
-        # Извлечь данные из таблицы
+        # Извлекаем данные из таблицы
         rows = table.find_elements(By.TAG_NAME, "tr")[
             1:]  # Пропускаем заголовок
         results = []
@@ -56,38 +62,21 @@ def track_package(tracking_number):
                 "Примечания": cells[2].text,
             })
 
+        logger.info(f"Данные отслеживания успешно извлечены: {results}")
         return results
+
     except Exception as e:
-        logger.error(f"""ВипМайл Уфа. Ошибка при парсинге для заказа: {
-                     tracking_number}: {e}""")
+        logger.error(f"Ошибка при обработке заказа {tracking_number}: {e}")
+        return None
     finally:
         driver.quit()
-
-
-def make_request(orderno):
-    """
-    Отправляет запрос к API и возвращает HTML-ответ.
-    :param orderno: Номер заказа
-    :return: HTML-контент ответа
-    """
-    try:
-
-        # Отправляем запрос на отслеживание
-        tracking_html = track_package(orderno)
-        logging.info("Получены данные отслеживания.")
-
-        logging.info(f"""ВипМайл Уфа. Ответ сервера для заказа {
-                     orderno}: {tracking_html}""")
-        return tracking_html  # Возвращаем HTML
-    except requests.RequestException as e:
-        logging.error(f"Ошибка при запросе: {e}")
-        raise
+        logger.info("Браузер закрыт.")
 
 
 def vip_mail_ufa(orderno):
     try:
-        response = make_request(orderno)
+        response = track_package(orderno)
         return response
     except Exception as e:
-        logging.error(f'ВипМайл Уфа. Ошибка при выполнении парсинга: {e}')
+        logger.error(f'Ошибка при выполнении парсинга: {e}')
         return None
