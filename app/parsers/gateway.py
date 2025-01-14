@@ -7,6 +7,7 @@ from app.parsers.rasstoyaniya_net_parse import rasstoyaniya_net  # pylint: disab
 from app.parsers.sib_express_parse import sib_express  # pylint: disable=unused-import
 from app.parsers.post_master_parse import post_master, extract_delivered_info_master  # pylint: disable=unused-import
 from app.parsers.plex_post_parse import plex_post, extract_delivered_info_plex  # pylint: disable=unused-import
+from app.parsers.vip_mail_ufa_parse import vip_mail_ufa, extract_delivered_info_vip_mail  # pylint: disable=unused-import
 from app.parsers.svs import get_orders, set_orders
 
 logger = logging.getLogger('parser')
@@ -105,6 +106,13 @@ def parser_main():
                         if result:
                             order_id = order.get('id')
                             name = "Плекс Пост"
+                            set_orders(result, order_id, name)
+
+                    elif value == "90b470a2-a775-11e7-ad08-74d43522d93b":
+                        result = extract_delivered_info_vip_mail(info)
+                        if result:
+                            order_id = order.get('id')
+                            name = "ВипМайл Уфа"
                             set_orders(result, order_id, name)
 
             except requests.exceptions.ConnectionError as e:

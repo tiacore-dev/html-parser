@@ -55,9 +55,9 @@ def create_app():
     # Добавление задачи в планировщик
     scheduler.add_job(
         func=parser_main,
-        trigger=IntervalTrigger(hours=2),
+        trigger=IntervalTrigger(hours=3),
         id='parser_main_job',
-        name='Выполнение parser_main каждые 2 часа',
+        name='Выполнение parser_main каждые 3 часа',
         replace_existing=True,
         max_instances=3,  # Разрешаем до 3 одновременно выполняющихся задач
         misfire_grace_time=3600  # Разрешаем выполнить пропущенные задачи в течение 1 часа
@@ -68,7 +68,5 @@ def create_app():
 
     # logging.info("Планировщик задач APScheduler успешно запущен.")
     setup_logger()
-
-    test_vip_mail()
 
     return app
