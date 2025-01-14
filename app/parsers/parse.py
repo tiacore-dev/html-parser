@@ -148,7 +148,7 @@ def parse_plex_post(html, orderno):
         # Ищем блок с классом panel-body
         panel_body = soup.find("div", class_="panel-body")
         if not panel_body:
-            logging.error("Не найдена область с информацией о статусах.")
+            logger.error("Не найдена область с информацией о статусах.")
             return []
 
         # Собираем события
@@ -163,12 +163,12 @@ def parse_plex_post(html, orderno):
                     "Статус": status
                 })
 
-        logging.info(f"""Плекс Пост. Полученные данные для заказа {
-                     orderno}: {events}""")
+        logger.info(f"""Плекс Пост. Полученные данные для заказа {
+            orderno}: {events}""")
         return events
 
     except Exception as e:
-        logging.error(f"Ошибка при парсинге HTML: {e}")
+        logger.error(f"Ошибка при парсинге HTML: {e}")
         return []
 
 
@@ -178,7 +178,7 @@ def parse_vip_mail_ufa(html, orderno):
         # Находим таблицу с данными
         table = soup.find("table", class_="show_tracks")
         if not table:
-            logging.error("Таблица с информацией об отслеживании не найдена.")
+            logger.error("Таблица с информацией об отслеживании не найдена.")
             return []
 
         rows = table.find("tbody").find_all("tr")  # Извлекаем строки таблицы
@@ -191,10 +191,10 @@ def parse_vip_mail_ufa(html, orderno):
                 notes = cols[2].get_text(strip=True)
                 events.append(
                     {"Дата": date, "Статус": status, "Примечания": notes})
-        logging.info(f"""ВипМайл Уфа. Полученные данные для заказа {
-                     orderno}: {events}""")
+        logger.info(f"""ВипМайл Уфа. Полученные данные для заказа {
+            orderno}: {events}""")
         return events
     except Exception as e:
-        logging.error(
+        logger.error(
             f"ВипМайл Уфа. Ошибка при парсинге HTML для заказа {orderno}: {e}")
         return []
