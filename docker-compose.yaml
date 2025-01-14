@@ -21,4 +21,4 @@ services:
 
 networks:
   parser_network:
-    driver: bridge
+    external: true
