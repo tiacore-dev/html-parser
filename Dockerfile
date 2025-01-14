@@ -13,11 +13,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Добавляем ключи и репозиторий для старой версии Google Chrome
-RUN curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
+# Устанавливаем конкретную версию Google Chrome
+RUN wget -q https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.90-1_amd64.deb && \
     apt-get update && \
-    apt-get install -y google-chrome-stable=114.0.5735.90-1 && \
+    apt-get install -y ./google-chrome-stable_114.0.5735.90-1_amd64.deb && \
+    rm google-chrome-stable_114.0.5735.90-1_amd64.deb && \
     apt-mark hold google-chrome-stable
 
 # Устанавливаем ChromeDriver версии 114
