@@ -1,10 +1,10 @@
 # Используем официальный образ Python в качестве базового
 FROM python:3.12-slim
 
-# Указываем рабочую директорию внутри контейнера
+# Указываем рабочую директорию
 WORKDIR /app
 
-# Устанавливаем зависимости системы
+# Устанавливаем системные зависимости
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     curl \
@@ -13,11 +13,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Устанавливаем Chrome версии 114
-RUN wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
+# Добавляем ключи и репозиторий для старой версии Google Chrome
+RUN curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
     apt-get update && \
-    apt-get install -y ./google-chrome-stable_current_amd64.deb && \
-    rm google-chrome-stable_current_amd64.deb
+    apt-get install -y google-chrome-stable=114.0.5735.90-1 && \
+    apt-mark hold google-chrome-stable
 
 # Устанавливаем ChromeDriver версии 114
 RUN CHROME_DRIVER_VERSION=114.0.5735.90 && \
@@ -31,13 +32,9 @@ RUN CHROME_DRIVER_VERSION=114.0.5735.90 && \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Устанавливаем Gunicorn
-RUN pip install gunicorn
-
-# Копируем весь код приложения в рабочую директорию
+# Копируем код приложения
 COPY . .
 
 # Указываем переменную окружения для headless режима
 ENV DISPLAY=:99
-
 
