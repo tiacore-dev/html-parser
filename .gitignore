@@ -8,7 +8,6 @@ dispatcher.py
 
 .pylintrc
 
-test.py
 
 # Distribution / packaging
 .Python

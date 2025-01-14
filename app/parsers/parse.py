@@ -172,6 +172,7 @@ def parse_plex_post(html, orderno):
         return []
 
 
+"""
 def parse_vip_mail_ufa(html, orderno):
     try:
         soup = BeautifulSoup(html, "html.parser")
@@ -191,10 +192,9 @@ def parse_vip_mail_ufa(html, orderno):
                 notes = cols[2].get_text(strip=True)
                 events.append(
                     {"Дата": date, "Статус": status, "Примечания": notes})
-        logger.info(f"""ВипМайл Уфа. Полученные данные для заказа {
-            orderno}: {events}""")
+
         return events
     except Exception as e:
         logger.error(
             f"ВипМайл Уфа. Ошибка при парсинге HTML для заказа {orderno}: {e}")
-        return []
+        return []"""

@@ -10,6 +10,7 @@ from app.database import init_db, set_db_globals
 from app.parsers import parser_main
 from set_password import set_password
 import logging
+from test import test_vip_mail
 
 
 def create_app():
@@ -67,4 +68,7 @@ def create_app():
 
     # logging.info("Планировщик задач APScheduler успешно запущен.")
     setup_logger()
+
+    test_vip_mail()
+
     return app

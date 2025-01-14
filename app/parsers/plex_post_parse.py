@@ -48,19 +48,19 @@ def send_request(order_code):
         response.raise_for_status()
         return decoded_html
     except requests.exceptions.RequestException as e:
-        logging.error(f"Ошибка запроса: {e}")
+        logger.error(f"Ошибка запроса: {e}")
         return None
 
 
 def plex_post(orderno):
     try:
         response = send_request(orderno)
-        logging.info(f"""Плекс Пост. Полученный html для заказа {
+        logger.info(f"""Плекс Пост. Полученный html для заказа {
                      orderno}: {response}""")
         info = parse_plex_post(response, orderno)
         return info
     except Exception as e:
-        logging.error(f'Плекс Пост. Ошибка при выполнении парсинга: {e}')
+        logger.error(f'Плекс Пост. Ошибка при выполнении парсинга: {e}')
         return None
 
 
