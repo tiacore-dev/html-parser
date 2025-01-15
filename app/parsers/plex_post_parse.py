@@ -56,7 +56,7 @@ def plex_post(orderno):
     try:
         response = send_request(orderno)
         logger.info(f"""Плекс Пост. Полученный html для заказа {
-                     orderno}: {response}""")
+            orderno}: {response}""")
         info = parse_plex_post(response, orderno)
         return info
     except Exception as e:
@@ -71,12 +71,12 @@ def extract_delivered_info_plex(events):
     :param events: Список событий
     :return: Список доставленных событий
     """
-    delivered_entries = [
-        {
-            "date": event["Дата"],
-            "recipient": event.get("Статус").split()[-1],
-            "status": "Доставлено"  # Переименовываем статус
-        }
-        for event in events if "доставлено" in event["Статус"].lower()
-    ]
-    return delivered_entries
+    result = None
+    for event in events:
+        if "доставлено" in event["Статус"].lower():
+            result = {
+                "date": event["Дата"],
+                "recipient": event.get("Статус").split()[-1],
+                "status": "Доставлено"  # Переименовываем статус
+            }
+    return result

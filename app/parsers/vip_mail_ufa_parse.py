@@ -89,6 +89,7 @@ def extract_delivered_info_vip_mail(events):
     :param events: Список событий (словарей) с ключами "Дата", "Состояние", "Примечания".
     :return: Список доставленных событий с отфильтрованной информацией.
     """
+    result = None
     for event in events:
         if "доставлено" in event["Состояние"].lower():
             result = {
@@ -97,8 +98,4 @@ def extract_delivered_info_vip_mail(events):
                 "recipient": event.get("Примечания", "Не указано"),
                 "status": "Доставлено"  # Переименовываем статус
             }
-
-    if result:
-        return result
-    else:
-        return None
+    return result

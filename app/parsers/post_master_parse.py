@@ -76,23 +76,19 @@ def post_master(orderno):
         return None
 
 
-def extract_delivered_info_master(order_data):
+def extract_delivered_info_master(events):
     """
     Извлекает информацию о доставленных заказах.
 
     :param order_data: Словарь с данными заказа
     :return: Список словарей с информацией о доставке
     """
-    delivered_entries = []
-
-    for entry in order_data.get("entries", []):
-        if "доставлено" in entry.get("Статус", "").lower():
-            delivered_info = {
-                "date": entry.get("Дата"),
-                # Получатель после слова "Доставлено"
-                "recipient": entry.get("Статус").split()[-1],
-                "status": "Доставлено"
+    result = None
+    for event in events:
+        if "доставлено" in event["Статус"].lower():
+            result = {
+                "date": event["Дата"],
+                "recipient": event.get("Статус").split()[-1],
+                "status": "Доставлено"  # Переименовываем статус
             }
-            delivered_entries.append(delivered_info)
-
-    return delivered_entries
+    return result
