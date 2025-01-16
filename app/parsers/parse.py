@@ -140,35 +140,3 @@ def parse_sib_express_response(html, orderno):
         logger.error(f"""Сибирский Экспресс. Ошибка при обработке заказа {
                      orderno}: {e}""")
         return {"error": str(e)}
-
-
-def parse_plex_post(html, orderno):
-    try:
-        # Парсим HTML
-        soup = BeautifulSoup(html, "html.parser")
-
-        # Ищем блок с классом panel-body
-        panel_body = soup.find("div", class_="panel-body")
-        if not panel_body:
-            logger.error("Не найдена область с информацией о статусах.")
-            return []
-
-        # Собираем события
-        events = []
-        strong_tags = panel_body.find_all("strong")  # Ищем все теги <strong>
-        for tag in strong_tags:
-            date = tag.text.strip()  # Извлекаем текст внутри <strong>
-            if tag.next_sibling and isinstance(tag.next_sibling, str):
-                status = tag.next_sibling.strip(" -").strip()
-                events.append({
-                    "Дата": date,
-                    "Статус": status
-                })
-
-        logger.info(f"""Плекс Пост. Полученные данные для заказа {
-            orderno}: {events}""")
-        return events
-
-    except Exception as e:
-        logger.error(f"Ошибка при парсинге HTML: {e}")
-        return []

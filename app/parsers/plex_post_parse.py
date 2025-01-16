@@ -1,10 +1,11 @@
 import logging
 import os
-import json
-import html
-import requests
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.by import By
+from selenium import webdriver
 from dotenv import load_dotenv
-from app.parsers.parse import parse_plex_post
 
 # Загрузка переменных окружения
 load_dotenv()
@@ -12,52 +13,77 @@ load_dotenv()
 logger = logging.getLogger('parser')
 
 
-def send_request(order_code):
+def create_firefox_driver():
+    try:
+        options = Options()
+        options.headless = True  # Запуск в headless-режиме
+        driver = webdriver.Firefox(options=options)
+        return driver
+    except Exception as e:
+        logger.error(f"Ошибка при создании драйвера Firefox: {e}")
+        raise
+
+
+def track_package_plexpost(order_code):
     url = os.getenv('URL_PLEX_POST')
-    params = {
-        "v": "1.4",
-        "method": "getTracking",
-        "token": "17e0b224abe4828d0a9ad369f8e2a256"
-    }
-    headers = {
-        "Accept": "application/json, text/javascript, */*; q=0.01",
-        "Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
-        "Connection": "keep-alive",
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "Cookie": "PHPSESSID=pidm8adq9j62bbah45p3tjeep2; city=%D0%A1%D0%B0%D0%BC%D0%B0%D1%80%D0%B0",
-        "Origin": "http://plexpost.ru",
-        "Referer": "http://plexpost.ru/tracking/",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        "X-Requested-With": "XMLHttpRequest"
-    }
-    data = {"codes": order_code}
+    driver = create_firefox_driver()
+    driver.get(url)
 
     try:
-        response = requests.post(
-            url, params=params, headers=headers, data=data, timeout=30)
+        # Ждем появления поля ввода
+        code_field = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.NAME, "codes"))
+        )
+        code_field.clear()
+        code_field.send_keys(order_code)
+        # logger.info(f"Код {order_code} введен.")
 
-        # Байты в строку
-        response_str = response.content.decode('utf-8')
+        # Ищем кнопку. Допустим, она имеет атрибут name="submit" или другой
+        submit_button = driver.find_element(By.ID, "check")  # Пример!
+        submit_button.click()
+        # logger.info("Кнопка отправки нажата.")
 
-        # Декодируем JSON
-        parsed_data = json.loads(response_str)
+        # Ждем появления какого-то блока результата (нужно уточнять по реальной верстке)
+        result_block = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located(
+                (By.CLASS_NAME, "row_track"))  # Пример!
+        )
+        # logger.info("Результат появился.")
 
-        # Достаем HTML-контент
-        decoded_html = html.unescape(parsed_data["content"])
+        # Парсим содержимое result_block
+        # Допустим, каждая запись - это <div class="history_item"> или <tr> и т. д.
+        # Нужно смотреть реальный HTML.
+        rows = result_block.find_elements(
+            By.CLASS_NAME, "some_history_class")  # Пример!
 
-        response.raise_for_status()
-        return decoded_html
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Ошибка запроса: {e}")
+        results = []
+        for row in rows:
+            # В зависимости от структуры строки
+            date_el = row.find_element(By.CLASS_NAME, "date_class")
+            status_el = row.find_element(By.CLASS_NAME, "status_class")
+            # и т. д.
+
+            results.append({
+                "Дата": date_el.text,
+                "Статус": status_el.text
+            })
+
+        logger.info(f"Плекс Пост. Данные отслеживания: {results}")
+        return results
+
+    except Exception as e:
+        logger.error(f"""Плекс Пост. Ошибка при обработке заказа {
+                     order_code}: {e}""")
         return None
+    finally:
+        driver.quit()
+        logger.info("Браузер закрыт.")
 
 
 def plex_post(orderno):
     try:
-        response = send_request(orderno)
-        logger.info(f"""Плекс Пост. Полученный html для заказа {
-            orderno}: {response}""")
-        info = parse_plex_post(response, orderno)
+        info = track_package_plexpost(orderno)
+        # info = parse_plex_post(response, orderno)
         return info
     except Exception as e:
         logger.error(f'Плекс Пост. Ошибка при выполнении парсинга: {e}')
