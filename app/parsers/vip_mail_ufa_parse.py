@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logger = logging.getLogger('parser')
-url = os.getenv('URL_VIP_MAIL_UFA')
 
 
 def create_firefox_driver():
@@ -25,6 +24,7 @@ def create_firefox_driver():
 
 
 def track_package(tracking_number):
+    url = os.getenv('URL_VIP_MAIL_UFA')
     driver = create_firefox_driver()
     driver.get(url)
 
