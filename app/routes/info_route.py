@@ -7,6 +7,7 @@ from app.parsers.rasstoyaniya_net_parse import rasstoyaniya_net  # pylint: disab
 from app.parsers.sib_express_parse import sib_express  # pylint: disable=unused-import
 from app.parsers.post_master_parse import post_master  # pylint: disable=unused-import
 from app.parsers.plex_post_parse import plex_post  # pylint: disable=unused-import
+from app.parsers.vip_mail_ufa_parse import vip_mail_ufa  # pylint: disable=unused-import
 
 # Получаем логгер по его имени
 logger = logging.getLogger('parser')
