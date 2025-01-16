@@ -86,7 +86,6 @@ def sib_express(orderno):
         return json.dumps({"error": str(e)}, ensure_ascii=False)
 
     html = response.text
-
     # Вызов функции парсинга
     info = parse_sib_express_response(html, orderno)
 

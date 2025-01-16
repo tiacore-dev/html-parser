@@ -99,9 +99,10 @@ def parse_sib_express_response(html, orderno):
         # Извлечение HTML из поля 'msg'
         raw_html = response_data["msg"]
         logger.info(
-            f"Сиб-Экспресс. Извлеченный HTML для заказа {orderno}: {raw_html}")
+            f"Сибисркий Экспресс. Извлеченный HTML для заказа {orderno}: {raw_html}")
     except json.JSONDecodeError:
-        logger.error(f"Ответ для заказа {orderno} не является валидным JSON.")
+        logger.error(f"""Сибирский Экспресс. Ответ для заказа {
+                     orderno} не является валидным JSON.""")
         return json.dumps({"error": "Invalid JSON response"}, ensure_ascii=False)
 
     try:
@@ -128,15 +129,16 @@ def parse_sib_express_response(html, orderno):
                     data[key] = value
         else:
             logger.error(
-                f"Таблица с деталями не найдена для заказа {orderno}.")
+                f"Сибирский Экспресс. Таблица с деталями не найдена для заказа {orderno}.")
             return {"error": "Detail table not found"}
 
         # Логирование и возврат результата
         logger.info(
-            f"Сиб-Экспресс. Полученные данные для заказа {orderno}: {data}")
+            f"Сибирский Экспресс. Полученные данные для заказа {orderno}: {data}")
         return data
     except Exception as e:
-        logger.error(f"Ошибка при обработке заказа {orderno}: {e}")
+        logger.error(f"""Сибирский Экспресс. Ошибка при обработке заказа {
+                     orderno}: {e}""")
         return {"error": str(e)}
 
 
