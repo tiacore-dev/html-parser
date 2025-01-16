@@ -25,48 +25,56 @@ def create_firefox_driver():
 
 
 def track_package_plexpost(order_code):
-    url = os.getenv('URL_PLEX_POST')
+    """
+    Открываем страницу plexpost.ru/tracking/,
+    вводим накладную в поле name='codes',
+    кликаем на кнопку 'Проверить', ждем появления результатов в блоке #tracking-results.
+    После чего «ленивым» способом разбиваем результат по строкам, 
+    разделяя «дату» и «статус» по разделителю " - ".
+    """
+    url = os.getenv(
+        'URL_PLEX_POST')
+
     driver = create_firefox_driver()
     driver.get(url)
 
     try:
-        # Ждем появления поля ввода
+        # 1) Ждем появления поля ввода: id="tn", name="codes"
         code_field = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.NAME, "codes"))
         )
         code_field.clear()
         code_field.send_keys(order_code)
-        # logger.info(f"Код {order_code} введен.")
+        logger.info(f"Код накладной {order_code} введён.")
 
-        # Ищем кнопку. Допустим, она имеет атрибут name="submit" или другой
-        submit_button = driver.find_element(By.ID, "check")  # Пример!
+        # 2) Нажимаем на кнопку с id="btn-tracking"
+        submit_button = driver.find_element(By.ID, "btn-tracking")
         submit_button.click()
-        # logger.info("Кнопка отправки нажата.")
+        logger.info("Кнопка 'Проверить' нажата.")
 
-        # Ждем появления какого-то блока результата (нужно уточнять по реальной верстке)
+        # 3) Ждем, пока появится блок с результатом: id="tracking-results"
         result_block = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located(
-                (By.CLASS_NAME, "row_track"))  # Пример!
+            EC.presence_of_element_located((By.ID, "tracking-results"))
         )
-        # logger.info("Результат появился.")
+        logger.info("Результаты отслеживания появились.")
 
-        # Парсим содержимое result_block
-        # Допустим, каждая запись - это <div class="history_item"> или <tr> и т. д.
-        # Нужно смотреть реальный HTML.
-        rows = result_block.find_elements(
-            By.CLASS_NAME, "some_history_class")  # Пример!
+        # 4) «Ленивый» вариант: берем весь текст из result_block
+        all_text = result_block.text
+        # Пример строки: "09.01.2025 07:42 - Поступило на склад Самара"
+        # Разделяем по переносам
+        lines = all_text.splitlines()
 
         results = []
-        for row in rows:
-            # В зависимости от структуры строки
-            date_el = row.find_element(By.CLASS_NAME, "date_class")
-            status_el = row.find_element(By.CLASS_NAME, "status_class")
-            # и т. д.
-
-            results.append({
-                "Дата": date_el.text,
-                "Статус": status_el.text
-            })
+        for line in lines:
+            # Ожидаем формат: "дата - статус"
+            parts = line.split(" - ", 1)  # делим один раз
+            if len(parts) == 2:
+                date_part = parts[0].strip()
+                status_part = parts[1].strip()
+                results.append({
+                    "Дата": date_part,
+                    "Статус": status_part
+                })
 
         logger.info(f"Плекс Пост. Данные отслеживания: {results}")
         return results
@@ -75,6 +83,7 @@ def track_package_plexpost(order_code):
         logger.error(f"""Плекс Пост. Ошибка при обработке заказа {
                      order_code}: {e}""")
         return None
+
     finally:
         driver.quit()
         logger.info("Браузер закрыт.")
