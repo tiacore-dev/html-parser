@@ -82,14 +82,17 @@ def parser_main():
                             set_orders(result, order_id, name)
 
                     elif value == "33c8793d-96c2-11e7-b541-00252274a609":
+                        result = None
                         for key, value in info.items():
                             rec = value.split(' ')
-                            result = {
-                                "date": key,
-                                "receipient": rec[2] if len(rec) > 2 else (rec[1] if len(rec) > 1 else None),
-                                "Status": rec[0] if len(rec) > 0 else None
-                            }
-                        if result['Status'] == "Доставлено":
+                            if len(rec) > 0:
+                                if rec[0].strip() == "Доставлено":
+                                    result = {
+                                        "date": key,
+                                        "receipient": rec[2] if len(rec) > 2 and rec[2].strip() else (rec[1] if len(rec) > 1 else None),
+                                        "Status": rec[0]
+                                    }
+                        if result:
                             order_id = order.get('id')
                             name = "Сибирский Экспресс"
                             set_orders(result, order_id, name)
