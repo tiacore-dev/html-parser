@@ -95,7 +95,7 @@ def extract_delivered_info_vip_mail(events):
             result = {
                 "date": event["Дата"],
                 # Получатель из "Примечания"
-                "recipient": event.get("Примечания", "Не указано"),
+                "receipient": event.get("Примечания", "Не указано"),
                 "status": "Доставлено"  # Переименовываем статус
             }
     return result

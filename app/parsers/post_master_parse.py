@@ -88,7 +88,7 @@ def extract_delivered_info_master(events):
         if "доставлено" in event["Статус"].lower():
             result = {
                 "date": event["Дата"],
-                "recipient": event.get("Статус").split()[-1],
+                "receipient": event.get("Статус").split()[-1],
                 "status": "Доставлено"  # Переименовываем статус
             }
     return result
