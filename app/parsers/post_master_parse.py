@@ -52,7 +52,7 @@ def post_master(orderno):
         response = make_request(orderno)
         logger.info(f"""Пост Мастер. Полученные данные для заказа {
                     orderno}: {response}""")
-        info = {"order_id": orderno, "entries": []}
+        info = []
         # Обработка данных из JSON
         if isinstance(response, list):
             for entry in response:
@@ -63,7 +63,7 @@ def post_master(orderno):
                     "Дата": entry.get("VDATE"),
                     "Статус": entry.get("VPOINT"),
                 }
-                info["entries"].append(order_entry)
+                info.append(order_entry)
             logger.info(f"Пост Мастер. Распарсенные данные: {info}")
             return info
         else:
