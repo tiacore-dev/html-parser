@@ -86,11 +86,11 @@ def parser_main():
                         for key, value in info.items():
                             rec = value.split(' ')
                             if len(rec) > 0:
-                                if rec[0].strip() == "Доставлено":
+                                if "доставлено" in rec[0].lower():
                                     result = {
                                         "date": key,
                                         "receipient": rec[2] if len(rec) > 2 and rec[2].strip() else (rec[1] if len(rec) > 1 else None),
-                                        "Status": rec[0]
+                                        "Status": "Доставлено"
                                     }
                         if result:
                             order_id = order.get('id')

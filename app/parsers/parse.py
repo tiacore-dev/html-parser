@@ -93,7 +93,7 @@ def parse_sib_express_response(html, orderno):
         response_data = json.loads(html)
         if "msg" not in response_data:
             logger.error(
-                f"Поле 'msg' отсутствует в ответе для заказа {orderno}.")
+                f"Сибирский Экспресс. Поле 'msg' отсутствует в ответе для заказа {orderno}.")
             return json.dumps({"error": "Invalid response format"}, ensure_ascii=False)
 
         # Извлечение HTML из поля 'msg'
