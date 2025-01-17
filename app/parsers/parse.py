@@ -99,7 +99,7 @@ def parse_sib_express_response(html, orderno):
         # Извлечение HTML из поля 'msg'
         raw_html = response_data["msg"]
         logger.info(
-            f"Сибисркий Экспресс. Извлеченный HTML для заказа {orderno}: {raw_html}")
+            f"Сибирский Экспресс. Извлеченный HTML для заказа {orderno}: {raw_html}")
     except json.JSONDecodeError:
         logger.error(f"""Сибирский Экспресс. Ответ для заказа {
                      orderno} не является валидным JSON.""")
