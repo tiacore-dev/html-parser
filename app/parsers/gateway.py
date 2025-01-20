@@ -76,7 +76,7 @@ def parser_main():
                             "receipient": f"{info['Получатель']}",
                             "Status": f"{info['Статус']}"
                         }
-                        if result['Status'] == "Доставлена" or result['Status'] == "Доставлено":
+                        if (result['Status'] == "Доставлена" or result['Status'] == "Доставлено") and result['receipient'] != 'Сдано в ТК':
                             order_id = order.get('id')
                             name = "Расстояния нет"
                             set_orders(result, order_id, name)
