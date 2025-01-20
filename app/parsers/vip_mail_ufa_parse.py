@@ -31,7 +31,7 @@ def track_package(tracking_number):
     try:
 
         # Вводим номер накладной
-        number_field = WebDriverWait(driver, 10).until(
+        number_field = WebDriverWait(driver, 30).until(
             EC.presence_of_element_located((By.NAME, "number"))
         )
         number_field.send_keys(tracking_number)
@@ -43,10 +43,11 @@ def track_package(tracking_number):
         # logger.info("Кнопка отправки нажата.")
 
         # Ждем появления таблицы с результатами
-        table = WebDriverWait(driver, 10).until(
+        table = WebDriverWait(driver, 30).until(
             EC.presence_of_element_located((By.CLASS_NAME, "show_tracks"))
         )
-        # logger.info("Таблица с результатами успешно найдена.")
+        logger.info(
+            f"ВипМайл Уфа. Таблица с результатами успешно найденаЖ {table}.")
 
         # Извлекаем данные из таблицы
         rows = table.find_elements(By.TAG_NAME, "tr")[
