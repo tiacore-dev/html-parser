@@ -85,13 +85,14 @@ def parser_main():
                         result = None
                         for key, value in info.items():
                             rec = value.split(' ')
-                            if len(rec) > 0:
-                                if "доставлено" in rec[0].lower():
-                                    result = {
-                                        "date": key,
-                                        "receipient": rec[2] if len(rec) > 2 and rec[2].strip() else (rec[1] if len(rec) > 1 else None),
-                                        "Status": "Доставлено"
-                                    }
+                            # Проверяем наличие статуса
+                            if len(rec) > 0 and rec[0] == 'Доставлено':
+                                result = {
+                                    "date": key,
+                                    # Берем третье слово, если оно есть
+                                    "receipient": rec[2] if len(rec) > 2 and rec[2].strip() else None,
+                                    "Status": "Доставлено"
+                                }
                         if result:
                             order_id = order.get('id')
                             name = "Сибирский Экспресс"
