@@ -4,7 +4,7 @@ import requests
 from app.parsers.sp_service_tyumen_parse import sp_service_tyumen  # pylint: disable=unused-import
 from app.parsers.sp_service_ekaterinburg_parse import sp_service_ekaterinburg  # pylint: disable=unused-import
 from app.parsers.rasstoyaniya_net_parse import rasstoyaniya_net  # pylint: disable=unused-import
-from app.parsers.sib_express_parse import sib_express  # pylint: disable=unused-import
+from app.parsers.sib_express_parse import sib_express, extract_delivered_info_sib  # pylint: disable=unused-import
 from app.parsers.post_master_parse import post_master, extract_delivered_info_master  # pylint: disable=unused-import
 from app.parsers.plex_post_parse import plex_post, extract_delivered_info_plex  # pylint: disable=unused-import
 from app.parsers.vip_mail_ufa_parse import vip_mail_ufa, extract_delivered_info_vip_mail  # pylint: disable=unused-import
@@ -82,17 +82,7 @@ def parser_main():
                             set_orders(result, order_id, name)
 
                     elif value == "33c8793d-96c2-11e7-b541-00252274a609":
-                        result = None
-                        for key, value in info.items():
-                            rec = value.split(' ')
-                            # Проверяем наличие статуса
-                            if len(rec) > 0 and rec[0] == 'Доставлено':
-                                result = {
-                                    "date": key,
-                                    # Берем третье слово, если оно есть
-                                    "receipient": rec[2] if len(rec) > 2 and rec[2].strip() else None,
-                                    "Status": "Доставлено"
-                                }
+                        result = extract_delivered_info_sib(info)
                         if result:
                             order_id = order.get('id')
                             name = "Сибирский Экспресс"

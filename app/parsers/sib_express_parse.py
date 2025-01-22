@@ -90,3 +90,18 @@ def sib_express(orderno):
     info = parse_sib_express_response(html, orderno)
 
     return info
+
+
+def extract_delivered_info_sib(info):
+    result = None
+    for key, value in info.items():
+        rec = value.split(' ')
+        # Проверяем наличие статуса
+        if len(rec) > 0 and rec[0] == 'Доставлено':
+            result = {
+                "date": key,
+                # Берем третье слово, если оно есть
+                "receipient": rec[-1],
+                "Status": "Доставлено"
+            }
+    return result
