@@ -1,7 +1,8 @@
 # parsers/sp_service_ekaterinburg.py
-import json
+
 import logging
 import requests
+from bs4 import BeautifulSoup
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import clean_html
 
@@ -52,18 +53,45 @@ class SPServiceBaseParser(BaseParser):
     def parse(self, orderno):
         html = self.get_html(orderno)
         if not html:
-            return {"error": "Failed to retrieve HTML"}
-        cleaned_html = clean_html(html)
-        logger.info(
-            f"{self.name}. Полученный HTML для order number {orderno}: {cleaned_html}")
-        table = self._get_table(cleaned_html, 'table-striped')
-        if not table:
-            logger.error(
-                f"{self.name}. Таблица с деталями не найдена для заказа {orderno}.")
-            return json.dumps({"error": "Detail table not found"}, ensure_ascii=False)
+            return None
+        try:
+            cleaned_html = clean_html(html)
+            logger.info(
+                f"{self.name}. HTML для order number {orderno}: {cleaned_html}")
+            soup = BeautifulSoup(cleaned_html, 'lxml')
+            all_tables = soup.find_all('table')
+            logger.debug(f"""Найденные таблицы: {
+                [str(table)[:200] for table in all_tables]}""")
 
-        data = self.extract_table_data(table, key_tag='td', min_cells=2)
-        return data
+            # Попробуем найти таблицу с данными
+            table = soup.find(
+                'table', class_=lambda x: x and 'table-striped' in x)
+
+            if not table:
+                logger.error(
+                    f"Т{self.name}.аблица с деталями не найдена для заказа {orderno}.")
+                return None
+
+            data = {}
+            rows = table.find_all('tr')
+            for row in rows:
+                # Используем <td> для первой ячейки
+                header_cell = row.find('td')
+                data_cell = row.find_all('td')[1] if len(
+                    row.find_all('td')) > 1 else None
+                if header_cell and data_cell:
+                    key = header_cell.get_text(strip=True).rstrip(':')
+                    value = data_cell.get_text(strip=True)
+                    data[key] = value
+
+            logger.info(
+                f"{self.name}. Полученные данные для order number {orderno}: {data}")
+            return data
+
+        except Exception as e:
+            logger.error(f"""{self.name}. Ошибка при обработке заказа {
+                         orderno}: {e}""")
+            return None
 
     def process_delivered_info(self, info):
         if info.get('Date parcel received'):

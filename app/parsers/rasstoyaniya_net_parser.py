@@ -4,6 +4,7 @@ import os
 import logging
 import requests
 from dotenv import load_dotenv
+from bs4 import BeautifulSoup
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import clean_html
 
@@ -64,20 +65,47 @@ class RasstoyaniyaNetParser(BaseParser):
     def parse(self, orderno):
         html = self.get_html(orderno)
         if not html:
-            return {"error": "Failed to retrieve HTML"}
+            return None
         cleaned_html = clean_html(html)
         logger.info(
             f"{self.name}. Полученный HTML для order number {orderno}: {cleaned_html}")
-        table = self._get_table(
-            html, class_name='detail-view', table_id='quick_find')
+        try:
+            soup = BeautifulSoup(cleaned_html, 'lxml')
 
-        if not table:
-            logger.error(
-                f"{self.name}. Таблица с деталями не найдена для заказа {orderno}.")
+            # Извлечение заголовка накладной
+            header = soup.find('h5', class_='find-header')
+            if header:
+                invoice = header.get_text(strip=True)
+            else:
+                logger.error(
+                    f"{self.name}.Не удалось найти заголовок накладной для заказа {orderno}.")
+                return None
+
+            # Извлечение данных из таблицы
+            table = soup.find('table', class_='detail-view', id='quick_find')
+            if not table:
+                logger.error(
+                    f"{self.name}.Таблица с деталями не найдена для заказа {orderno}.")
+                return None
+
+            data = {"invoice": invoice}
+
+            rows = table.find_all('tr')
+            for row in rows:
+                header_cell = row.find('th')
+                data_cell = row.find('td')
+                if header_cell and data_cell:
+                    key = header_cell.get_text(strip=True).rstrip(':')
+                    value = data_cell.get_text(strip=True)
+                    data[key] = value
+
+            logger.info(f"""{self.name}.Расстояния.нет. Полученные данные для заказа {
+                        orderno}: {data}""")
+            return data
+        except Exception as e:
+            logger.error(f"""{self.name}. Ошибка при обработке заказа {
+                         orderno}: {e}""")
             return None
-
-        data = self.extract_table_data(table, key_tag='th', min_cells=2)
-        return data
 
     def process_delivered_info(self, info):
         result = None

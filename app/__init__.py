@@ -63,6 +63,6 @@ def create_app():
     # logging.info("Планировщик задач APScheduler успешно запущен.")
     setup_logger()
 
-    # parser_main()
+    parser_main()
 
     return app

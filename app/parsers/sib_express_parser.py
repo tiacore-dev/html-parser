@@ -98,19 +98,45 @@ class SibExpressParser(BaseParser):
     def parse(self, orderno):
         html = self.get_html(orderno)
         if not html:
-            return {"error": "Failed to retrieve HTML"}
+            return None
         cleaned_html = clean_html(html)
         logger.info(
             f"{self.name}. Полученный HTML для order number {orderno}: {cleaned_html}")
         # Ищем первую таблицу (или по фильтрам, если заданы)
-        table = self._get_table(cleaned_html)
-        if not table:
-            logger.error(
-                f"{self.name}. Таблица с деталями не найдена для заказа {orderno}.")
+        # Парсинг HTML
+        soup = BeautifulSoup(html, 'lxml')
+
+        # Проверка на отсутствие данных
+        if "Не найдено" in html:
+            logger.error(f"Ответ не содержит данных для заказа {orderno}.")
             return None
 
-        data = self.extract_table_data(table, key_tag='td', exact_cells=2)
-        return data
+            # Извлечение данных из таблицы
+        data = {}
+        try:
+            # Поиск таблицы или строки с информацией
+            table = soup.find('table')
+            if table:
+                rows = table.find_all('tr')
+                for row in rows:
+                    cells = row.find_all('td')
+                    if len(cells) == 2:
+                        key = cells[0].get_text(strip=True)
+                        value = cells[1].get_text(strip=True)
+                        data[key] = value
+            else:
+                logger.error(
+                    f"{self.name}. Таблица с деталями не найдена для заказа {orderno}.")
+                return None
+
+            # Логирование и возврат результата
+            logger.info(
+                f"{self.name}. Полученные данные для заказа {orderno}: {data}")
+            return data
+        except Exception as e:
+            logger.error(f"""{self.name}. Ошибка при обработке заказа {
+                orderno}: {e}""")
+            return None
 
     def process_delivered_info(self, info):
         result = None
