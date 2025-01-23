@@ -69,7 +69,7 @@ class SPServiceBaseParser(BaseParser):
 
             if not table:
                 logger.error(
-                    f"Т{self.name}.аблица с деталями не найдена для заказа {orderno}.")
+                    f"{self.name}. Таблица с деталями не найдена для заказа {orderno}.")
                 return None
 
             data = {}
