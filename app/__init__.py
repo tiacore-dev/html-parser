@@ -1,5 +1,5 @@
 # __init__.py
-
+import logging
 from flask_jwt_extended import JWTManager
 from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -9,7 +9,6 @@ from logger import setup_logger
 from app.database import init_db, set_db_globals
 from app.parsers import parser_main
 from set_password import set_password
-import logging
 
 
 def create_app():
@@ -22,13 +21,9 @@ def create_app():
     set_db_globals(engine, Session, Base)
     set_password(login=app.config['LOGIN'], password=app.config['PASSWORD'])
 
-    # logging.info("База данных успешно инициализирована.")
-
     # Инициализация JWT
     try:
         JWTManager(app)
-        # logging.info(f"""JWT инициализирован. Срок действия токенов: {
-        # app.config['JWT_ACCESS_TOKEN_EXPIRES']}""")
     except Exception as e:
         logging.error(f"Ошибка при инициализации JWT: {e}")
         raise
@@ -67,5 +62,7 @@ def create_app():
 
     # logging.info("Планировщик задач APScheduler успешно запущен.")
     setup_logger()
+
+    # parser_main()
 
     return app

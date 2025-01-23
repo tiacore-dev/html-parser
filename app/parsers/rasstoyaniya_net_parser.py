@@ -1,0 +1,90 @@
+# parsers/rasstoyaniya_net.py
+
+import os
+import logging
+import requests
+from dotenv import load_dotenv
+from app.parsers.base_parser import BaseParser
+from app.utils.helpers import clean_html
+
+# Загрузка переменных окружения
+load_dotenv()
+
+logger = logging.getLogger('parser')
+
+
+class RasstoyaniyaNetParser(BaseParser):
+    name = "Расстояния нет"
+    url = os.getenv('URL_RASTOYANIYA')
+    # Куки
+    cookies = {
+        "geobase": "a:0:{}",
+        "PHPSESSID": "r4emb86q6607kifd0qe53titc3",
+        "_ym_uid": "1734680291770530560",
+        "_ym_d": "1734680291",
+        "_ym_isad": "2",
+        "lhc_per": "{\"vid\":\"3dy2q6mmldpts6crn3k\"}"
+    }
+
+    def get_html(self, orderno):
+        if not self.url:
+            raise ValueError(
+                f"URL для {self.name} не задан. Проверьте переменные окружения.")
+
+        # Параметры формы
+        data = {
+            "FindForm[bill]": orderno
+        }
+        custom_headers = {
+            "origin": "https://www.rasstoyanie.net",
+            "priority": "u=1, i",
+            "referer": self.url,
+            "sec-ch-ua": "\"Google Chrome\";v=\"131\", \"Chromium\";v=\"131\", \"Not_A Brand\";v=\"24\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
+            "x-requested-with": "XMLHttpRequest",
+        }
+        headers = self._get_headers(custom_headers)
+
+        session = requests.Session()
+
+        try:
+            response = session.post(
+                self.url, data=data, headers=headers, cookies=self.cookies, timeout=30)
+            response.raise_for_status()
+            return response.text
+        except requests.exceptions.RequestException as e:
+            logger.error(f"""{self.name}. Request failed for order {
+                orderno}: {e}""")
+            return None
+
+    def parse(self, orderno):
+        html = self.get_html(orderno)
+        if not html:
+            return {"error": "Failed to retrieve HTML"}
+        cleaned_html = clean_html(html)
+        logger.info(
+            f"{self.name}. Полученный HTML для order number {orderno}: {cleaned_html}")
+        table = self._get_table(
+            html, class_name='detail-view', table_id='quick_find')
+
+        if not table:
+            logger.error(
+                f"{self.name}. Таблица с деталями не найдена для заказа {orderno}.")
+            return None
+
+        data = self.extract_table_data(table, key_tag='th', min_cells=2)
+        return data
+
+    def process_delivered_info(self, info):
+        result = None
+        if (info['Статус'] == "Доставлена" or info['Статус'] == "Доставлено") and info['Получатель'] != 'Сдано в ТК':
+            result = {
+                "date": f"{info['Дата доставки']}",
+                "receipient": f"{info['Получатель']}",
+                "Status": f"{info['Статус']}"
+            }
+        return result
