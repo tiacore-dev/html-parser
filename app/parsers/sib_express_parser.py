@@ -147,7 +147,7 @@ class SibExpressParser(BaseParser):
                 result = {
                     "date": key,
                     # Берем третье слово, если оно есть
-                    "receipient": rec[-1],
+                    "receipient": rec[2] if len(rec) > 1 else rec[1],
                     "Status": "Доставлено"
                 }
         return result
