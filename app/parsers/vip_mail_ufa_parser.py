@@ -45,7 +45,7 @@ class VIPMailUfaParser(BaseParser):
                 EC.presence_of_element_located((By.CLASS_NAME, "show_tracks"))
             )
             logger.info(
-                f"{self.name}. Таблица с результатами успешно найденаЖ {table}.")
+                f"{self.name}. Таблица с результатами успешно найдена: {table}.")
 
             # Извлекаем данные из таблицы
             rows = table.find_elements(By.TAG_NAME, "tr")[

@@ -79,10 +79,10 @@ class AvisLogisticsParser(BaseParser):
         if not html:
             return None
         cleaned_html = clean_html(html)
-        logger.info(
-            f"{self.name}. Полученный HTML для order number {orderno}: {cleaned_html}")
+        # logger.info(
+        # f"{self.name}. Полученный HTML для order number {orderno}: {cleaned_html}")
 
-        soup = BeautifulSoup(html, 'lxml')
+        soup = BeautifulSoup(cleaned_html, 'lxml')
 
         # Проверка на отсутствие данных
         if "Не найдено" in html:

@@ -87,8 +87,8 @@ class SibExpressParser(BaseParser):
 
             # Извлечение HTML из поля 'msg'
             raw_html = response_data["msg"]
-            logger.info(
-                f"{self.name}. Извлеченный HTML для заказа {orderno}: {raw_html}")
+            # logger.info(
+            # f"{self.name}. Извлеченный HTML для заказа {orderno}: {raw_html}")
             return raw_html
         except requests.exceptions.RequestException as e:
             logger.error(f"""{self.name}. Request failed for order {
