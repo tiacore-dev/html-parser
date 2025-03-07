@@ -99,7 +99,7 @@ class RasstoyaniyaNetParser(BaseParser):
                     value = data_cell.get_text(strip=True)
                     data[key] = value
 
-            logger.info(f"""{self.name}.Расстояния.нет. Полученные данные для заказа {
+            logger.info(f"""{self.name}. Полученные данные для заказа {
                         orderno}: {data}""")
             return data
         except Exception as e:

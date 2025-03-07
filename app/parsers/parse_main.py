@@ -9,6 +9,7 @@ from app.parsers.sib_express_parser import SibExpressParser
 from app.parsers.post_master_parser import PostMasterParser
 from app.parsers.plex_post_parser import PlexPostParser
 from app.parsers.vip_mail_ufa_parser import VIPMailUfaParser
+from app.parsers.bizon_parser import BizonExpressParser
 from app.parsers.svs import get_orders, set_orders
 
 logger = logging.getLogger('parser')
@@ -21,7 +22,8 @@ partners = {
     "b3116f3b-9f4a-11e7-a536-00252274a609": RasstoyaniyaNetParser(),
     "1034e0be-855a-11ea-80dd-74d43522d93b": PostMasterParser(),
     "d56a2a0c-6339-11e8-80b5-74d43522d93b": PlexPostParser(),
-    "90b470a2-a775-11e7-ad08-74d43522d93b": VIPMailUfaParser()
+    "90b470a2-a775-11e7-ad08-74d43522d93b": VIPMailUfaParser(),
+    "6208860c-f583-11ef-9de4-a1ec92d2beb8": BizonExpressParser()
 }
 
 
