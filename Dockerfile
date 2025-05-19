@@ -1,10 +1,10 @@
-# Используем официальный образ Python в качестве базового
+# Используем официальный Python-образ
 FROM python:3.12-slim
 
-# Указываем рабочую директорию внутри контейнера
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Устанавливаем системные зависимости
+# Устанавливаем системные зависимости и удаляем мусор
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     curl \
@@ -17,8 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libasound2 \
     libgtk-3-0 \
     libdbus-glib-1-2 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Устанавливаем GeckoDriver
 RUN GECKODRIVER_VERSION="v0.33.0" && \
@@ -28,11 +27,12 @@ RUN GECKODRIVER_VERSION="v0.33.0" && \
     mv geckodriver /usr/local/bin/ && \
     chmod +x /usr/local/bin/geckodriver
 
-# Устанавливаем Python-зависимости
+# Устанавливаем зависимости Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем код приложения
+# Копируем код проекта
 COPY . .
 
-
+# Запускаем приложение через Xvfb и gunicorn
+CMD sh -c "Xvfb :99 -screen 0 1920x1080x24 & gunicorn -c gunicorn.conf.py run:app"
