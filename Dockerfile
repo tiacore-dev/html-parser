@@ -1,10 +1,24 @@
-# Используем официальный Python-образ
-FROM python:3.12-slim
+# ===== Этап 1: билд Python-зависимостей =====
+FROM python:3.12-slim AS builder
 
-# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Устанавливаем системные зависимости и удаляем мусор
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+ && pip install --prefix=/install --no-cache-dir -r requirements.txt
+
+# ===== Этап 2: runtime =====
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Системные зависимости: Xvfb + Firefox + нужные lib
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     curl \
@@ -17,9 +31,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libasound2 \
     libgtk-3-0 \
     libdbus-glib-1-2 \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Устанавливаем GeckoDriver
+# Установка GeckoDriver
 RUN GECKODRIVER_VERSION="v0.33.0" && \
     wget -q "https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz" && \
     tar -xzf "geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz" && \
@@ -27,12 +42,11 @@ RUN GECKODRIVER_VERSION="v0.33.0" && \
     mv geckodriver /usr/local/bin/ && \
     chmod +x /usr/local/bin/geckodriver
 
-# Устанавливаем зависимости Python
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Копируем зависимости из builder'а
+COPY --from=builder /install /usr/local
 
-# Копируем код проекта
+# Копируем исходный код
 COPY . .
 
-# Запускаем приложение через Xvfb и gunicorn
-CMD sh -c "Xvfb :99 -screen 0 1920x1080x24 & gunicorn -c gunicorn.conf.py run:app"
+# Очистка мусора перед стартом + запуск
+CMD sh -c "rm -rf /tmp/* ~/.mozilla ~/.cache && Xvfb :99 -screen 0 1920x1080x24 & gunicorn -c gunicorn.conf.py run:app"

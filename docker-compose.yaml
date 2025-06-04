@@ -1,14 +1,15 @@
+version: "3.8"
+
 services:
   web:
-    tty: true
-    stdin_open: true
     build: .
     restart: always
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
+    tty: true
+    stdin_open: true
+
     ports:
       - "${FLASK_PORT}:${FLASK_PORT}"
+
     environment:
       - HTTP_PROXY=
       - HTTPS_PROXY=
@@ -19,16 +20,18 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
     volumes:
-      - .:/app
-      - ./data:/tmp/app-data
-      - ./data:/tmp/app-data 
+      - type: tmpfs
+        target: /tmp
+
     command: >
-      sh -c "rm -f /tmp/.X99-lock && Xvfb :99 -screen 0 1920x1080x24 &
-            gunicorn -c /app/gunicorn.conf.py run:app"
+      sh -c "rm -f /tmp/.X99-lock &&
+             Xvfb :99 -screen 0 1920x1080x24 &
+             gunicorn -c /app/gunicorn.conf.py run:app"
+
     networks:
       - parser_network
-    
 
 networks:
   parser_network:
