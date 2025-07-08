@@ -1,22 +1,24 @@
 # parsers/sib_express.py
 
-import os
 import logging
+import os
+
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import clean_html
 
 # Загрузка переменных окружения
 load_dotenv()
 
-logger = logging.getLogger('parser')
+logger = logging.getLogger("parser")
 
 
 class AvisLogisticsParser(BaseParser):
     name = "Авис-Логистик"
-    url = os.getenv('URL_AVIS_LOGISTICS')
+    url = os.getenv("URL_AVIS_LOGISTICS")
     # Куки
     cookies = {
         "PHPSESSID": "uur2h0fp5ks9hub2dnn462j5kq",
@@ -30,8 +32,7 @@ class AvisLogisticsParser(BaseParser):
 
     def get_html(self, orderno):
         if not self.url:
-            raise ValueError(
-                f"URL для {self.name} не задан. Проверьте переменные окружения.")
+            raise ValueError(f"URL для {self.name} не задан. Проверьте переменные окружения.")
         session = requests.Session()
 
         # Параметры формы
@@ -56,22 +57,18 @@ class AvisLogisticsParser(BaseParser):
         }
 
         try:
-            response = session.post(
-                self.url, data=data, headers=headers, cookies=self.cookies, timeout=30)
+            response = session.post(self.url, data=data, headers=headers, cookies=self.cookies, timeout=30)
             response.raise_for_status()
             html = response.text
 
             if not html:
-                logger.error(
-                    f"{self.name}. Не получили html для заказа {orderno}.")
+                logger.error(f"{self.name}. Не получили html для заказа {orderno}.")
                 return None
 
-            logger.info(
-                f"{self.name}. Извлеченный HTML для заказа {orderno}: {html}")
+            logger.info(f"{self.name}. Извлеченный HTML для заказа {orderno}: {html}")
             return html
         except requests.exceptions.RequestException as e:
-            logger.error(f"""{self.name}. Request failed for order {
-                         orderno}: {e}""")
+            logger.error(f"""{self.name}. Request failed for order {orderno}: {e}""")
             return None
 
     def parse(self, orderno):
@@ -82,7 +79,7 @@ class AvisLogisticsParser(BaseParser):
         # logger.info(
         # f"{self.name}. Полученный HTML для order number {orderno}: {cleaned_html}")
 
-        soup = BeautifulSoup(cleaned_html, 'lxml')
+        soup = BeautifulSoup(cleaned_html, "lxml")
 
         # Проверка на отсутствие данных
         if "Не найдено" in html:
@@ -93,64 +90,53 @@ class AvisLogisticsParser(BaseParser):
 
         try:
             # Ищем блоки с событиями (доставка, транзит и т. д.)
-            events_container = soup.find_all(
-                'div', class_='window__trace_content')
+            events_container = soup.find_all("div", class_="window__trace_content")
 
             if not events_container:
-                logger.error(
-                    f"{self.name}. Данные о заказе {orderno} не найдены.")
+                logger.error(f"{self.name}. Данные о заказе {orderno} не найдены.")
                 return None
 
             # Обрабатываем первую найденную таблицу со статусами заказа
-            status_rows = events_container[-1].find_all(
-                'div', class_='window__trace_row')
+            status_rows = events_container[-1].find_all("div", class_="window__trace_row")
 
             for row in status_rows:
-                cells = row.find_all('div', class_='trace__row_title text')
+                cells = row.find_all("div", class_="trace__row_title text")
                 if len(cells) == 3:
                     event = {
-                        'date': cells[0].get_text(strip=True),
-                        'status': cells[1].get_text(strip=True),
-                        'city': cells[2].get_text(strip=True),
+                        "date": cells[0].get_text(strip=True),
+                        "status": cells[1].get_text(strip=True),
+                        "city": cells[2].get_text(strip=True),
                     }
                     data.append(event)
 
             # Теперь ищем блок с получателем/администратором
             receiver_block = events_container[-2]  # Берём второй с конца
-            receiver_rows = receiver_block.find_all(
-                'div', class_='window__trace_row')
+            receiver_rows = receiver_block.find_all("div", class_="window__trace_row")
 
             if receiver_rows:
-                last_receiver = receiver_rows[-1].find_all(
-                    'div', class_='trace__row_title text')
+                last_receiver = receiver_rows[-1].find_all("div", class_="trace__row_title text")
                 if len(last_receiver) == 3:
                     receiver_info = {
-                        'date': last_receiver[0].get_text(strip=True),
-                        'receiver_name': last_receiver[1].get_text(strip=True),
-                        'receiver_role': last_receiver[2].get_text(strip=True),
-                        'status': 'receiver'
+                        "date": last_receiver[0].get_text(strip=True),
+                        "receiver_name": last_receiver[1].get_text(strip=True),
+                        "receiver_role": last_receiver[2].get_text(strip=True),
+                        "status": "receiver",
                     }
                     data.append(receiver_info)
 
-            logger.info(
-                f"{self.name}. Полученные данные для заказа {orderno}: {data}")
+            logger.info(f"{self.name}. Полученные данные для заказа {orderno}: {data}")
             return data
 
         except Exception as e:
-            logger.error(
-                f"{self.name}. Ошибка при обработке заказа {orderno}: {e}")
+            logger.error(f"{self.name}. Ошибка при обработке заказа {orderno}: {e}")
             return None
 
     def process_delivered_info(self, info):
         result = None
         for event in info:
             # Проверяем наличие статуса
-            if len(event) > 0 and event['status'] == 'Доставлено':
+            if len(event) > 0 and event["status"] == "Доставлено":
                 receiver_info = info[-1]
-                if receiver_info['receiver_name']:
-                    result = {
-                        "date": event['date'],
-                        "receipient": receiver_info['receiver_name'],
-                        "Status": "Доставлено"
-                    }
+                if receiver_info["receiver_name"]:
+                    result = {"date": event["date"], "receipient": receiver_info["receiver_name"], "Status": "Доставлено"}
         return result

@@ -1,33 +1,35 @@
 # parsers/sib_express.py
 
-import os
 import json
 import logging
+import os
+
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from dotenv import load_dotenv
+
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import clean_html
 
 # Загрузка переменных окружения
 load_dotenv()
 
-logger = logging.getLogger('parser')
+logger = logging.getLogger("parser")
 
 
 def get_csrf_token(session, url):
     response = session.get(url)
     response.raise_for_status()
-    soup = BeautifulSoup(response.text, 'html.parser')
-    token_input = soup.find('input', {'name': '_token'})
-    if not token_input or 'value' not in token_input.attrs:
+    soup = BeautifulSoup(response.text, "html.parser")
+    token_input = soup.find("input", {"name": "_token"})
+    if not isinstance(token_input, Tag) or "value" not in token_input.attrs:
         raise ValueError(f"CSRF-токен не найден по URL: {url}")
-    return token_input['value']
+    return token_input["value"]
 
 
 class SibExpressParser(BaseParser):
     name = "Сибирский Экспресс"
-    url = os.getenv('URL_SIB_EXPRESS')
+    url = os.getenv("URL_SIB_EXPRESS")
     # Куки
     cookies = {
         "_ym_uid": "1734680388574908198",
@@ -38,21 +40,17 @@ class SibExpressParser(BaseParser):
         "_ga": "GA1.2.845727486.1734680388",
         "_gid": "GA1.2.1752836982.1734680388",
         "_gat_gtag_UA_69478068_8": "1",
-        "XSRF-TOKEN": "eyJpdiI6IkErVExBZXVMTUtsd21mamdEcjVkemc9PSIsInZhbHVlIjoicXhrS3BJS0hGV2xBR3FkOVRcL09tUm1TNlBqMnVRc0hXSkQxY1wvVDhvT2VDeEN2dGY3Ylwvc1J1eHk4NDFjc0Q2c1VKXC9EY3FOd0RVcDgzSkdOQ3RjVDR3PT0iLCJtYWMiOiI4MjQ1YTFjYWRkZTM3ZjRjMjhhZmZhOTUxYWU2ZDlkNDBiZjU3Njg4YTY0MTY0ZTg1ZDU0NmE1NWVhMDAzOGNkIn0",
-        "sibirskiy_ekspress_session": "eyJpdiI6InlSTVgwQyswTDYrTzYwMFM3NndcL29nPT0iLCJ2YWx1ZSI6Ik0xVHVkdCtOT2JtZEVMRldSc0Jmb0dwRFhCcGVOeCt2akVRSm4xandkcit5VzRXNWpnQ2JoVE5ybms2UWp4WmVzdENVOVVveklKWk45NWp1THcxYkVnPT0iLCJtYWMiOiI2YmMzZGVlZWQwZjFhMmEyYTg4YjMwY2Q4NmQ4YzgyM2QwNjkyOGE2NGZjNjRhMzA0ZWVjMzczYmZkZGY1ODRkIn0"
+        "XSRF-TOKEN": "eyJpdiI6IkErVExBZXVMTUtsd21mamdEcjVkemc9PSIsInZhbHVlIjoicXhrS3BJS0hGV2xBR3FkOVRcL09tUm1TNlBqMnVRc0hXSkQxY1wvVDhvT2VDeEN2dGY3Ylwvc1J1eHk4NDFjc0Q2c1VKXC9EY3FOd0RVcDgzSkdOQ3RjVDR3PT0iLCJtYWMiOiI4MjQ1YTFjYWRkZTM3ZjRjMjhhZmZhOTUxYWU2ZDlkNDBiZjU3Njg4YTY0MTY0ZTg1ZDU0NmE1NWVhMDAzOGNkIn0",  # type: ignore
+        "sibirskiy_ekspress_session": "eyJpdiI6InlSTVgwQyswTDYrTzYwMFM3NndcL29nPT0iLCJ2YWx1ZSI6Ik0xVHVkdCtOT2JtZEVMRldSc0Jmb0dwRFhCcGVOeCt2akVRSm4xandkcit5VzRXNWpnQ2JoVE5ybms2UWp4WmVzdENVOVVveklKWk45NWp1THcxYkVnPT0iLCJtYWMiOiI2YmMzZGVlZWQwZjFhMmEyYTg4YjMwY2Q4NmQ4YzgyM2QwNjkyOGE2NGZjNjRhMzA0ZWVjMzczYmZkZGY1ODRkIn0",  # type: ignore
     }
 
     def get_html(self, orderno):
         if not self.url:
-            raise ValueError(
-                f"URL для {self.name} не задан. Проверьте переменные окружения.")
+            raise ValueError(f"URL для {self.name} не задан. Проверьте переменные окружения.")
         session = requests.Session()
 
         # Параметры формы
-        data = {
-            "name": orderno,
-            "tab": "1"
-        }
+        data = {"name": orderno, "tab": "1"}
         csrf_token = get_csrf_token(session, self.url)
         data["_token"] = csrf_token
 
@@ -65,24 +63,22 @@ class SibExpressParser(BaseParser):
             "Sec-Fetch-Mode": "cors",
             "Sec-Fetch-Site": "same-origin",
             "X-Requested-With": "XMLHttpRequest",
-            "sec-ch-ua": "\"Google Chrome\";v=\"131\", \"Chromium\";v=\"131\", \"Not_A Brand\";v=\"24\"",
+            "sec-ch-ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
             "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-ch-ua-platform": '"Windows"',
         }
 
         # Получаем итоговые заголовки
         headers = self._get_headers(custom_headers)
 
         try:
-            response = session.post(
-                self.url, data=data, headers=headers, cookies=self.cookies, timeout=30)
+            response = session.post(self.url, data=data, headers=headers, cookies=self.cookies, timeout=30)
             response.raise_for_status()
             html = response.text
             # Попытка декодирования JSON
             response_data = json.loads(html)
             if "msg" not in response_data:
-                logger.error(
-                    f"{self.name}. Поле 'msg' отсутствует в ответе для заказа {orderno}.")
+                logger.error(f"{self.name}. Поле 'msg' отсутствует в ответе для заказа {orderno}.")
                 return None
 
             # Извлечение HTML из поля 'msg'
@@ -91,8 +87,7 @@ class SibExpressParser(BaseParser):
             # f"{self.name}. Извлеченный HTML для заказа {orderno}: {raw_html}")
             return raw_html
         except requests.exceptions.RequestException as e:
-            logger.error(f"""{self.name}. Request failed for order {
-                         orderno}: {e}""")
+            logger.error(f"""{self.name}. Request failed for order {orderno}: {e}""")
             return None
 
     def parse(self, orderno):
@@ -100,11 +95,10 @@ class SibExpressParser(BaseParser):
         if not html:
             return None
         cleaned_html = clean_html(html)
-        logger.info(
-            f"{self.name}. Полученный HTML для order number {orderno}: {cleaned_html}")
+        logger.info(f"{self.name}. Полученный HTML для order number {orderno}: {cleaned_html}")
         # Ищем первую таблицу (или по фильтрам, если заданы)
         # Парсинг HTML
-        soup = BeautifulSoup(html, 'lxml')
+        soup = BeautifulSoup(html, "lxml")
 
         # Проверка на отсутствие данных
         if "Не найдено" in html:
@@ -115,39 +109,39 @@ class SibExpressParser(BaseParser):
         data = {}
         try:
             # Поиск таблицы или строки с информацией
-            table = soup.find('table')
+            table = soup.find("table")
             if table:
-                rows = table.find_all('tr')
+                if not isinstance(table, Tag):
+                    logger.error("Неверный тип: таблица не найдена или не является HTML-тегом")
+                    return None
+                rows = table.find_all("tr")
                 for row in rows:
-                    cells = row.find_all('td')
+                    cells = row.find_all("td")
                     if len(cells) == 2:
                         key = cells[0].get_text(strip=True)
                         value = cells[1].get_text(strip=True)
                         data[key] = value
             else:
-                logger.error(
-                    f"{self.name}. Таблица с деталями не найдена для заказа {orderno}.")
+                logger.error(f"{self.name}. Таблица с деталями не найдена для заказа {orderno}.")
                 return None
 
             # Логирование и возврат результата
-            logger.info(
-                f"{self.name}. Полученные данные для заказа {orderno}: {data}")
+            logger.info(f"{self.name}. Полученные данные для заказа {orderno}: {data}")
             return data
         except Exception as e:
-            logger.error(f"""{self.name}. Ошибка при обработке заказа {
-                orderno}: {e}""")
+            logger.error(f"""{self.name}. Ошибка при обработке заказа {orderno}: {e}""")
             return None
 
     def process_delivered_info(self, info):
         result = None
         for key, value in info.items():
-            rec = value.split(' ')
+            rec = value.split(" ")
             # Проверяем наличие статуса
-            if len(rec) > 0 and rec[0] == 'Доставлено':
+            if len(rec) > 0 and rec[0] == "Доставлено":
                 result = {
                     "date": key,
                     # Берем третье слово, если оно есть
                     "receipient": rec[2] if len(rec) > 1 else rec[1],
-                    "Status": "Доставлено"
+                    "Status": "Доставлено",
                 }
         return result

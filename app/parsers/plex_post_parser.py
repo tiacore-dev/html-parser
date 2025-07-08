@@ -1,29 +1,29 @@
 import logging
 import os
+
+from dotenv import load_dotenv
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException
-from dotenv import load_dotenv
+
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import create_firefox_driver
 
 # Загрузка переменных окружения
 load_dotenv()
 
-logger = logging.getLogger('parser')
+logger = logging.getLogger("parser")
 
 
 class PlexPostParser(BaseParser):
-    url = url = os.getenv(
-        'URL_PLEX_POST')
+    url = url = os.getenv("URL_PLEX_POST", "")
     name = "Плекс Пост"
     DEFAULT_WAIT_TIME = 30
 
     def get_html(self, orderno):
         """Метод не нужен для PlexPostParser."""
-        raise NotImplementedError(
-            f"Метод 'get_html' не реализован в {self.name}.")
+        raise NotImplementedError(f"Метод 'get_html' не реализован в {self.name}.")
 
     def parse(self, orderno):
         driver = create_firefox_driver()
@@ -58,20 +58,17 @@ class PlexPostParser(BaseParser):
                 if len(parts) == 2:
                     date_part = parts[0].strip()
                     status_part = parts[1].strip()
-                    results.append({
-                        "Дата": date_part,
-                        "Статус": status_part
-                    })
+                    results.append({"Дата": date_part, "Статус": status_part})
 
             logger.info(f"{self.name}. Данные отслеживания: {results}")
             return results
         except TimeoutException as e:
-            logger.error(f"""{self.name}. Элемент не найден для заказа {
-                         orderno}: {e}""")
+            logger.error(
+                f"""{self.name}. Элемент не найден для заказа {orderno}: {e}"""
+            )
             return None
         except Exception as e:
-            logger.error(f"""{self.name}. Ошибка при обработке заказа {
-                orderno}: {e}""")
+            logger.error(f"""{self.name}. Ошибка при обработке заказа {orderno}: {e}""")
             return None
 
         finally:
@@ -83,6 +80,6 @@ class PlexPostParser(BaseParser):
                 return {
                     "date": event["Дата"],
                     "receipient": event["Статус"].split()[-1],
-                    "status": "Доставлено"
+                    "status": "Доставлено",
                 }
         return None

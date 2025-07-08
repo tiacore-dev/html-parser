@@ -1,11 +1,12 @@
 import os
-from dotenv import load_dotenv
 from multiprocessing import cpu_count
+
+from dotenv import load_dotenv
 
 load_dotenv()
 
 # Убедитесь, что порт задан с безопасным значением по умолчанию
-port = os.getenv('FLASK_PORT', '8000')
+port = os.getenv("FLASK_PORT", "8000")
 
 bind = f"0.0.0.0:{port}"
 workers = cpu_count() * 2 + 1  # Динамическое определение количества воркеров

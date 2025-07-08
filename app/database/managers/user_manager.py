@@ -1,7 +1,9 @@
 import uuid
-# from sqlalchemy import exists
-from app.database.models import User
+
 from app.database.db_globals import Session
+
+# from sqlalchemy import exists
+from app.database.models.user import User
 
 
 class UserManager:
@@ -56,8 +58,7 @@ class UserManager:
         session = self.Session()
         try:
             # Используем SELECT COUNT для более надежной проверки
-            exists_query = session.query(
-                User).filter_by(login=username).first()
+            exists_query = session.query(User).filter_by(login=username).first()
             return exists_query is not None
         except Exception as e:
             session.rollback()

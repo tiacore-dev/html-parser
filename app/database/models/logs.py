@@ -1,10 +1,12 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Text
+
+from sqlalchemy import Column, DateTime, Integer, String, Text
+
 from app.database.db_setup import Base
 
 
 class Logs(Base):
-    __tablename__ = 'logs'
+    __tablename__ = "logs"
 
     log_id = Column(Integer, primary_key=True, autoincrement=True)
     # Действие, которое было выполнено
@@ -19,5 +21,5 @@ class Logs(Base):
             "id": self.log_id,
             "action": self.action,
             "message": self.message,
-            "timestamp": self.timestamp.isoformat()  # Форматируем дату для JSON
+            "timestamp": self.timestamp.isoformat(),  # Форматируем дату для JSON
         }

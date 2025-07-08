@@ -1,7 +1,9 @@
-from datetime import timedelta, datetime
-from app.database.models import Logs
+from datetime import datetime, timedelta
+
+from sqlalchemy import and_, desc, or_
+
 from app.database.db_globals import Session
-from sqlalchemy import or_, and_, desc
+from app.database.models.logs import Logs
 
 
 class LogManager:
@@ -28,10 +30,7 @@ class LogManager:
         """Получение логов по дате."""
         session = self.Session()
         try:
-            return session.query(Logs).filter(
-                Logs.timestamp >= date,
-                Logs.timestamp < date + timedelta(days=1)
-            ).offset(offset).limit(limit).all()
+            return session.query(Logs).filter(Logs.timestamp >= date, Logs.timestamp < date + timedelta(days=1)).offset(offset).limit(limit).all()
         except Exception as e:
             print(f"Ошибка при получении логов по дате: {e}")
             return []
@@ -45,11 +44,8 @@ class LogManager:
             query = session.query(Logs)
             if date:
                 # Конвертация строки даты в объект datetime
-                date_obj = datetime.strptime(date, '%Y-%m-%d')
-                query = query.filter(
-                    Logs.timestamp >= date_obj,
-                    Logs.timestamp < date_obj + timedelta(days=1)
-                )
+                date_obj = datetime.strptime(date, "%Y-%m-%d")
+                query = query.filter(Logs.timestamp >= date_obj, Logs.timestamp < date_obj + timedelta(days=1))
             return query.offset(offset).limit(limit).all()
         except Exception as e:
             print(f"Ошибка при фильтрации логов: {e}")
@@ -67,34 +63,18 @@ class LogManager:
             if date:
                 try:
                     # Конвертируем строку в дату
-                    date_obj = datetime.strptime(date, '%Y-%m-%d')
-                    query = query.filter(
-                        Logs.timestamp >= date_obj,
-                        Logs.timestamp < date_obj + timedelta(days=1)
-                    )
+                    date_obj = datetime.strptime(date, "%Y-%m-%d")
+                    query = query.filter(Logs.timestamp >= date_obj, Logs.timestamp < date_obj + timedelta(days=1))
                 except ValueError as exc:
-                    raise ValueError(
-                        "Некорректный формат даты. Ожидается формат 'YYYY-MM-DD'."
-                    ) from exc
+                    raise ValueError("Некорректный формат даты. Ожидается формат 'YYYY-MM-DD'.") from exc
 
             # Фильтрация по тексту поиска
             if search:
-                query = query.filter(
-                    or_(
-                        Logs.message.ilike(f"%{search}%"),
-                        Logs.action.ilike(f"%{search}%")
-                    )
-                )
+                query = query.filter(or_(Logs.message.ilike(f"%{search}%"), Logs.action.ilike(f"%{search}%")))
 
             # Фильтрация по ключевым словам
             if keywords:
-                keyword_conditions = [
-                    or_(
-                        Logs.message.ilike(f"%{kw}%"),
-                        Logs.action.ilike(f"%{kw}%")
-                    )
-                    for kw in keywords
-                ]
+                keyword_conditions = [or_(Logs.message.ilike(f"%{kw}%"), Logs.action.ilike(f"%{kw}%")) for kw in keywords]
                 query = query.filter(and_(*keyword_conditions))
 
             # Добавляем сортировку по времени в порядке убывания
@@ -127,14 +107,10 @@ class LogManager:
             if date:
                 try:
                     # Конвертируем строку в дату
-                    date_obj = datetime.strptime(date, '%Y-%m-%d')
-                    query = query.filter(
-                        Logs.timestamp >= date_obj,
-                        Logs.timestamp < date_obj + timedelta(days=1)
-                    )
+                    date_obj = datetime.strptime(date, "%Y-%m-%d")
+                    query = query.filter(Logs.timestamp >= date_obj, Logs.timestamp < date_obj + timedelta(days=1))
                 except ValueError as exc:
-                    raise ValueError(
-                        "Некорректный формат даты. Ожидается формат 'YYYY-MM-DD'.") from exc
+                    raise ValueError("Некорректный формат даты. Ожидается формат 'YYYY-MM-DD'.") from exc
             logs = query.all()  # Получаем логи
 
             # Форматируем логи в виде списка словарей

@@ -1,19 +1,21 @@
 import logging
-from concurrent.futures import ThreadPoolExecutor
 import time
+from concurrent.futures import ThreadPoolExecutor
+
 import requests
-from app.parsers.sp_service_tyumen_parser import SPServiceTyumenParser
-from app.parsers.sp_service_ekaterinburg_parser import SPServiceEkaterinburgParser
-from app.parsers.rasstoyaniya_net_parser import RasstoyaniyaNetParser
-from app.parsers.sib_express_parser import SibExpressParser
-from app.parsers.post_master_parser import PostMasterParser
-from app.parsers.plex_post_parser import PlexPostParser
-from app.parsers.vip_mail_ufa_parser import VIPMailUfaParser
+
 from app.parsers.avis_logistics_parser import AvisLogisticsParser
 from app.parsers.bizon_parser import BizonExpressParser
+from app.parsers.plex_post_parser import PlexPostParser
+from app.parsers.post_master_parser import PostMasterParser
+from app.parsers.rasstoyaniya_net_parser import RasstoyaniyaNetParser
+from app.parsers.sib_express_parser import SibExpressParser
+from app.parsers.sp_service_ekaterinburg_parser import SPServiceEkaterinburgParser
+from app.parsers.sp_service_tyumen_parser import SPServiceTyumenParser
 from app.parsers.svs import get_orders, set_orders
+from app.parsers.vip_mail_ufa_parser import VIPMailUfaParser
 
-logger = logging.getLogger('parser')
+logger = logging.getLogger("parser")
 
 
 partners = {
@@ -25,7 +27,7 @@ partners = {
     "d56a2a0c-6339-11e8-80b5-74d43522d93b": PlexPostParser(),
     "90b470a2-a775-11e7-ad08-74d43522d93b": VIPMailUfaParser(),
     "6208860c-f583-11ef-9de4-a1ec92d2beb8": BizonExpressParser(),
-    "076db763-9c54-11e7-aa9c-00252274a609": AvisLogisticsParser()
+    "076db763-9c54-11e7-aa9c-00252274a609": AvisLogisticsParser(),
 }
 
 
@@ -37,10 +39,9 @@ def process_orders_for_partner(partner_id, parser):
         return
 
     for order in orders:
-        order_number = order.get('number')
+        order_number = order.get("number")
         if not order_number:
-            logger.warning(
-                f"Order number is missing for partner {partner_id}.")
+            logger.warning(f"Order number is missing for partner {partner_id}.")
             continue
 
         try:
@@ -48,7 +49,7 @@ def process_orders_for_partner(partner_id, parser):
             if info:
                 result = parser.process_delivered_info(info)
                 if result:
-                    order_id = order.get('id')
+                    order_id = order.get("id")
                     set_orders(result, order_id, parser.name)
         except Exception as e:
             handle_error(order_number, e)
@@ -69,5 +70,5 @@ def parser_main():
     with ThreadPoolExecutor(max_workers=7) as executor:  # Один поток на партнёра
         executor.map(
             lambda partner: process_orders_for_partner(*partner),
-            partners.items()  # Передаём кортеж (partner_id, parser)
+            partners.items(),  # Передаём кортеж (partner_id, parser)
         )

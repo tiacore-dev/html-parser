@@ -1,28 +1,35 @@
-from flask import jsonify, request, Blueprint, render_template
-from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, verify_jwt_in_request
+from flask import Blueprint, jsonify, render_template, request
+from flask_jwt_extended import (
+    create_access_token,
+    create_refresh_token,
+    get_jwt_identity,
+    verify_jwt_in_request,
+)
 
-
-login_bp = Blueprint('login_bp', __name__)
+login_bp = Blueprint("login_bp", __name__)
 
 
 # Маршрут для страницы входа
-@login_bp.route('/login', methods=['GET'])
+@login_bp.route("/login", methods=["GET"])
 def login_func():
-    return render_template('login.html')
+    return render_template("login.html")
 
 
 # Выход из системы
-@login_bp.route('/logout')
+@login_bp.route("/logout")
 def logout():
     return jsonify({"msg": "Logout successful"}), 200
 
 
-@login_bp.route('/auth', methods=['POST'])
+@login_bp.route("/auth", methods=["POST"])
 def auth():
     from app.database.managers.user_manager import UserManager
+
     db = UserManager()
 
     try:
+        if not request.json:
+            return jsonify({"msg": "Bad request"}), 400
         # Получаем данные из запроса
         login = request.json.get("login", None)
         password = request.json.get("password", None)
@@ -45,10 +52,12 @@ def auth():
         return {"msg": "Internal server error"}, 500
 
 
-@login_bp.route('/refresh', methods=['POST'])
+@login_bp.route("/refresh", methods=["POST"])
 def refresh():
+    if not request.json:
+        return jsonify({"msg": "Bad request"}), 400
     # Получение токена из тела запроса
-    refresh_token = request.json.get('refresh_token', None)
+    refresh_token = request.json.get("refresh_token", None)
     if not refresh_token:
         return jsonify({"msg": "Missing refresh token"}), 400
 

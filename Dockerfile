@@ -35,7 +35,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Установка GeckoDriver
-RUN GECKODRIVER_VERSION="v0.33.0" && \
+RUN GECKODRIVER_VERSION="v0.36.0" && \
     wget -q "https://github.com/mozilla/geckodriver/releases/download/$GECKODRIVER_VERSION/geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz" && \
     tar -xzf "geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz" && \
     rm "geckodriver-$GECKODRIVER_VERSION-linux64.tar.gz" && \

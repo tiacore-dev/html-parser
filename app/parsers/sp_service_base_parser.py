@@ -1,33 +1,30 @@
 # parsers/sp_service_ekaterinburg.py
 
 import logging
+
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
+
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import clean_html
 
-
-logger = logging.getLogger('parser')
+logger = logging.getLogger("parser")
 
 
 class SPServiceBaseParser(BaseParser):
     def get_html(self, orderno):
         if not self.url:
-            raise ValueError(
-                f"URL для {self.name} не задан. Проверьте переменные окружения.")
+            raise ValueError(f"URL для {self.name} не задан. Проверьте переменные окружения.")
 
         # Параметры запроса
-        params = {
-            "orderno": orderno,
-            "singlebutton": "submit"
-        }
+        params = {"orderno": orderno, "singlebutton": "submit"}
         # Заголовки запроса
         custom_headers = {
             "priority": "u=0, i",
             "referer": f"{self.url}/{self.referer_suffix}?orderno={orderno}&singlebutton=submit",
-            "sec-ch-ua": "\"Google Chrome\";v=\"131\", \"Chromium\";v=\"131\", \"Not_A Brand\";v=\"24\"",
+            "sec-ch-ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
             "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-ch-ua-platform": '"Windows"',
             "sec-fetch-dest": "iframe",
             "sec-fetch-mode": "navigate",
             "sec-fetch-site": "same-origin",
@@ -40,14 +37,12 @@ class SPServiceBaseParser(BaseParser):
 
         session = requests.Session()
         try:
-            response = session.get(
-                self.url, params=params, headers=headers, cookies=self.cookies, timeout=30)
+            response = session.get(self.url, params=params, headers=headers, cookies=self.cookies, timeout=30)
             response.raise_for_status()
             return response.text
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"""{self.name}. Request failed for order {
-                         orderno}: {e}""")
+            logger.error(f"""{self.name}. Request failed for order {orderno}: {e}""")
             return None
 
     def parse(self, orderno):
@@ -56,48 +51,44 @@ class SPServiceBaseParser(BaseParser):
             return None
         try:
             cleaned_html = clean_html(html)
-            logger.info(
-                f"{self.name}. HTML для order number {orderno}: {cleaned_html}")
-            soup = BeautifulSoup(cleaned_html, 'lxml')
-            all_tables = soup.find_all('table')
-            logger.debug(f"""Найденные таблицы: {
-                [str(table)[:200] for table in all_tables]}""")
+            logger.info(f"{self.name}. HTML для order number {orderno}: {cleaned_html}")
+            soup = BeautifulSoup(cleaned_html, "lxml")
+            all_tables = soup.find_all("table")
+            logger.debug(f"""Найденные таблицы: {[str(table)[:200] for table in all_tables]}""")
 
             # Попробуем найти таблицу с данными
-            table = soup.find(
-                'table', class_=lambda x: x and 'table-striped' in x)
+            table = soup.find("table", class_=lambda x: isinstance(x, str) and "table-striped" in x)
 
             if not table:
-                logger.error(
-                    f"{self.name}. Таблица с деталями не найдена для заказа {orderno}.")
+                logger.error(f"{self.name}. Таблица с деталями не найдена для заказа {orderno}.")
                 return None
 
             data = {}
-            rows = table.find_all('tr')
+            if not isinstance(table, Tag):
+                logger.error("Неверный тип: таблица не найдена или не является HTML-тегом")
+                return None
+            rows = table.find_all("tr")
             for row in rows:
                 # Используем <td> для первой ячейки
-                header_cell = row.find('td')
-                data_cell = row.find_all('td')[1] if len(
-                    row.find_all('td')) > 1 else None
+                header_cell = row.find("td")
+                data_cell = row.find_all("td")[1] if len(row.find_all("td")) > 1 else None
                 if header_cell and data_cell:
-                    key = header_cell.get_text(strip=True).rstrip(':')
+                    key = header_cell.get_text(strip=True).rstrip(":")
                     value = data_cell.get_text(strip=True)
                     data[key] = value
 
-            logger.info(
-                f"{self.name}. Полученные данные для order number {orderno}: {data}")
+            logger.info(f"{self.name}. Полученные данные для order number {orderno}: {data}")
             return data
 
         except Exception as e:
-            logger.error(f"""{self.name}. Ошибка при обработке заказа {
-                         orderno}: {e}""")
+            logger.error(f"""{self.name}. Ошибка при обработке заказа {orderno}: {e}""")
             return None
 
     def process_delivered_info(self, info):
-        if info.get('Date parcel received'):
+        if info.get("Date parcel received"):
             return {
                 "date": f"{info['Date parcel received']} {info['Time parcel received']}",
-                "receipient": info['Delivery info'],
-                "Status": info['Status'],
+                "receipient": info["Delivery info"],
+                "Status": info["Status"],
             }
         return None

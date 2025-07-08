@@ -1,14 +1,15 @@
 import logging
+
 from flask import Blueprint, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 # Получаем логгер по его имени
-logger = logging.getLogger('parser')
+logger = logging.getLogger("parser")
 
-account_bp = Blueprint('account', __name__)
+account_bp = Blueprint("account", __name__)
 
 
-@account_bp.route('/protected', methods=['GET'])
+@account_bp.route("/protected", methods=["GET"])
 @jwt_required()
 def protected():
     try:
@@ -20,7 +21,7 @@ def protected():
         return jsonify({"error": "Authorization failed"}), 401
 
 
-@account_bp.route('/get_username', methods=['GET'])
+@account_bp.route("/get_username", methods=["GET"])
 @jwt_required()  # Требуется авторизация с JWT
 def get_username():
     current_user = get_jwt_identity()
