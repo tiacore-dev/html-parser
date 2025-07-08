@@ -4,10 +4,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 import requests
 
+from app.parsers.arsexpress_parser import ArsexpressParser
 from app.parsers.avis_logistics_parser import AvisLogisticsParser
 from app.parsers.bizon_parser import BizonExpressParser
 from app.parsers.plex_post_parser import PlexPostParser
-from app.parsers.post_master_parser import PostMasterParser
 from app.parsers.rasstoyaniya_net_parser import RasstoyaniyaNetParser
 from app.parsers.sib_express_parser import SibExpressParser
 from app.parsers.sp_service_ekaterinburg_parser import SPServiceEkaterinburgParser
@@ -23,11 +23,12 @@ partners = {
     "1d4be527-c61e-11e7-9bdb-74d43522d93b": SPServiceEkaterinburgParser(),
     "33c8793d-96c2-11e7-b541-00252274a609": SibExpressParser(),
     "b3116f3b-9f4a-11e7-a536-00252274a609": RasstoyaniyaNetParser(),
-    "1034e0be-855a-11ea-80dd-74d43522d93b": PostMasterParser(),
+    # "1034e0be-855a-11ea-80dd-74d43522d93b": PostMasterParser(),
     "d56a2a0c-6339-11e8-80b5-74d43522d93b": PlexPostParser(),
     "90b470a2-a775-11e7-ad08-74d43522d93b": VIPMailUfaParser(),
     "6208860c-f583-11ef-9de4-a1ec92d2beb8": BizonExpressParser(),
     "076db763-9c54-11e7-aa9c-00252274a609": AvisLogisticsParser(),
+    "1034e0be-855a-11ea-80dd-74d43522d93b": ArsexpressParser(),
 }
 
 

@@ -30,9 +30,7 @@ class PlexPostParser(BaseParser):
         driver.get(self.url)
         try:
             # 1) Ждем появления поля ввода: id="tn", name="codes"
-            code_field = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(
-                EC.presence_of_element_located((By.NAME, "codes"))
-            )
+            code_field = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.NAME, "codes")))
             code_field.clear()
             code_field.send_keys(orderno)
 
@@ -41,9 +39,7 @@ class PlexPostParser(BaseParser):
             submit_button.click()
 
             # 3) Ждем, пока появится блок с результатом: id="tracking-results"
-            result_block = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(
-                EC.presence_of_element_located((By.ID, "tracking-results"))
-            )
+            result_block = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.ID, "tracking-results")))
 
             # 4) «Ленивый» вариант: берем весь текст из result_block
             all_text = result_block.text
@@ -63,9 +59,7 @@ class PlexPostParser(BaseParser):
             logger.info(f"{self.name}. Данные отслеживания: {results}")
             return results
         except TimeoutException as e:
-            logger.error(
-                f"""{self.name}. Элемент не найден для заказа {orderno}: {e}"""
-            )
+            logger.error(f"""{self.name}. Элемент не найден для заказа {orderno}: {e}""")
             return None
         except Exception as e:
             logger.error(f"""{self.name}. Ошибка при обработке заказа {orderno}: {e}""")
