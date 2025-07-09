@@ -17,7 +17,7 @@ def create_app():
     app = Flask(__name__)
 
     app.config.from_object(Config)
-
+    logging.debug(f"Database url: {Config.DATABASE_URL}")
     # Инициализация базы данных
     engine, Session, Base = init_db(app.config["DATABASE_URL"])
     set_db_globals(engine, Session, Base)
