@@ -2,9 +2,8 @@ import os
 
 from dotenv import load_dotenv
 
-from app import create_app
-
 load_dotenv()
+from app import create_app
 
 # Получаем порт из переменных окружения
 port = os.getenv("FLASK_PORT", "5000")
