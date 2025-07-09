@@ -19,7 +19,7 @@ def create_app():
     app.config.from_object(Config)
 
     # Инициализация базы данных
-    engine, Session, Base = init_db(app.config["SQLALCHEMY_DATABASE_URI"])
+    engine, Session, Base = init_db(app.config["DATABASE_URL"])
     set_db_globals(engine, Session, Base)
     set_password(login=app.config["LOGIN"], password=app.config["PASSWORD"])
 
