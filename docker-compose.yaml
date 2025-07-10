@@ -5,9 +5,6 @@ services:
     tty: true
     stdin_open: true
 
-    ports:
-      - "${FLASK_PORT}:${FLASK_PORT}"
-
     environment:
       - HTTP_PROXY=
       - HTTPS_PROXY=
