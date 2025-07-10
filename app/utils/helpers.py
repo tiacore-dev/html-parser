@@ -1,8 +1,8 @@
 # utils/helpers.py
 
 import logging
+import os
 import re
-import shutil
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
@@ -21,8 +21,7 @@ def clean_html(html):
 def create_firefox_driver():
     logger.info("🚗 Попытка запуска Firefox драйвера")
     try:
-        assert shutil.which("firefox"), "❌ Firefox не найден"
-        assert shutil.which("geckodriver"), "❌ Geckodriver не найден"
+        os.environ["DISPLAY"] = ":99"  # ключ для Xvfb
         options = Options()
         options.add_argument("-headless")
         options.add_argument("--no-sandbox")
