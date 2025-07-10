@@ -24,7 +24,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     curl \
     unzip \
-    xvfb \
     libgtk-3-0 \
     libdbus-glib-1-2 \
     libnss3 \
@@ -53,4 +52,4 @@ COPY --from=builder /install /usr/local
 COPY . .
 
 # Очистка мусора перед стартом + запуск
-CMD sh -c "rm -rf /tmp/* ~/.mozilla ~/.cache && Xvfb :99 -screen 0 1920x1080x24 & gunicorn -c gunicorn.conf.py run:app"
+CMD sh -c "rm -rf /tmp/* ~/.mozilla ~/.cache && gunicorn -c gunicorn.conf.py run:app"
