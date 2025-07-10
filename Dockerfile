@@ -39,5 +39,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Запуск с Xvfb
-CMD ["sh", "-c", "rm -f /tmp/.X99-lock && Xvfb :99 -screen 0 1920x1080x24 & gunicorn -c gunicorn.conf.py run:app"]
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+CMD ["/start.sh"]
