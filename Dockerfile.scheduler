@@ -8,6 +8,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # Установка системных зависимостей + Firefox + geckodriver
 RUN apt-get update && apt-get install -y --no-install-recommends \
     firefox-esr \
+    xauth \
     wget \
     curl \
     unzip \
