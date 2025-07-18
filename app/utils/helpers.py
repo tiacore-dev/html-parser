@@ -24,12 +24,12 @@ def create_firefox_driver():
         os.environ["DISPLAY"] = ":99"  # ключ для Xvfb
         options = Options()
         options.add_argument("-headless")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
 
-        driver = webdriver.Firefox(options=options)
         logger.info("✅ Firefox драйвер успешно запущен")
-        return driver
+        return webdriver.Remote(
+            command_executor=os.getenv("SELENIUM_REMOTE_URL", "http://selenium:4444/wd/hub"),
+            options=options,
+        )
     except Exception as e:
         logger.exception(f"❌ Ошибка при создании Firefox драйвера: {e}")
         raise
