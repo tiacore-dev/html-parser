@@ -23,7 +23,7 @@ def create_app() -> FastAPI:
 
         await Tortoise.close_connections()
 
-    app = FastAPI(title="MK Parser", lifespan=lifespan)
+    app = FastAPI(title="SVS Parser", lifespan=lifespan)
 
     app.add_middleware(
         CORSMiddleware,
