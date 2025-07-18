@@ -23,6 +23,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxss1 \
     libxtst6 \
     libxi6 \
+    libegl1 \
+    libgl1 \
+    libgl1-mesa-glx \
+    libglx0 \
+    libpci3 \
     fonts-liberation \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
