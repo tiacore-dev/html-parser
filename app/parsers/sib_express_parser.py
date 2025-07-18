@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 from loguru import logger
 
 from app.parsers.base_parser import BaseParser
-from app.utils.helpers import clean_html
 
 # Загрузка переменных окружения
 load_dotenv()
@@ -92,8 +91,8 @@ class SibExpressParser(BaseParser):
         html = self.get_html(orderno)
         if not html:
             return None
-        cleaned_html = clean_html(html)
-        logger.info(f"{self.name}. Полученный HTML для order number {orderno}: {cleaned_html}")
+        # cleaned_html = clean_html(html)
+        # logger.info(f"{self.name}. Полученный HTML для order number {orderno}: {cleaned_html}")
         # Ищем первую таблицу (или по фильтрам, если заданы)
         # Парсинг HTML
         soup = BeautifulSoup(html, "lxml")

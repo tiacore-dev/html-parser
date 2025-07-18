@@ -62,7 +62,7 @@ class RasstoyaniyaNetParser(BaseParser):
         if not html:
             return None
         cleaned_html = clean_html(html)
-        logger.info(f"{self.name}. Полученный HTML для order number {orderno}: {cleaned_html}")
+        # logger.info(f"{self.name}. Полученный HTML для order number {orderno}: {cleaned_html}")
         try:
             soup = BeautifulSoup(cleaned_html, "lxml")
 

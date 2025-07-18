@@ -50,7 +50,7 @@ async def process_orders_for_partner(partner_id, parser):
         await save_log(
             partner_id,
             None,
-            None,
+            "",
             parser.name,
             success=False,
             error_message="Нет заказов",
