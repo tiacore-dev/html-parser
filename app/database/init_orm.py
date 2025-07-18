@@ -6,7 +6,7 @@ from tortoise import Tortoise
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("SCHEDULER_DATABASE_URL")
 
 
 async def init_db():

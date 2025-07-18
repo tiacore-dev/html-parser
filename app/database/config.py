@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv("WEB_DATABASE_URL")
 
 TORTOISE_ORM = {
     "connections": {"default": DATABASE_URL},
