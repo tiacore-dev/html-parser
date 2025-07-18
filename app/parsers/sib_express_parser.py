@@ -80,8 +80,7 @@ class SibExpressParser(BaseParser):
 
             # Извлечение HTML из поля 'msg'
             raw_html = response_data["msg"]
-            # logger.info(
-            # f"{self.name}. Извлеченный HTML для заказа {orderno}: {raw_html}")
+
             return raw_html
         except requests.exceptions.RequestException as e:
             logger.error(f"""{self.name}. Request failed for order {orderno}: {e}""")
@@ -91,9 +90,7 @@ class SibExpressParser(BaseParser):
         html = self.get_html(orderno)
         if not html:
             return None
-        # cleaned_html = clean_html(html)
-        # logger.info(f"{self.name}. Полученный HTML для order number {orderno}: {cleaned_html}")
-        # Ищем первую таблицу (или по фильтрам, если заданы)
+
         # Парсинг HTML
         soup = BeautifulSoup(html, "lxml")
 

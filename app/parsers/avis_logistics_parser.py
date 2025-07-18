@@ -63,7 +63,6 @@ class AvisLogisticsParser(BaseParser):
                 logger.error(f"{self.name}. Не получили html для заказа {orderno}.")
                 return None
 
-            logger.info(f"{self.name}. Извлеченный HTML для заказа {orderno}: {html}")
             return html
         except requests.exceptions.RequestException as e:
             logger.error(f"""{self.name}. Request failed for order {orderno}: {e}""")

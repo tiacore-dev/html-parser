@@ -49,7 +49,7 @@ class SPServiceBaseParser(BaseParser):
             return None
         try:
             cleaned_html = clean_html(html)
-            logger.info(f"{self.name}. HTML для order number {orderno}: {cleaned_html}")
+
             soup = BeautifulSoup(cleaned_html, "lxml")
             all_tables = soup.find_all("table")
             logger.debug(f"""Найденные таблицы: {[str(table)[:200] for table in all_tables]}""")

@@ -52,7 +52,7 @@ class BizonExpressParser(BaseParser):
 
     def parse(self, orderno):
         html = self.get_html(orderno)
-        # logger.info(f"{self.name}. Полученный HTML для order number {orderno}: {html}")
+
         if not html:
             return None
 
