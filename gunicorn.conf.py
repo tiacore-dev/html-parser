@@ -1,22 +1,24 @@
-import os
 from multiprocessing import cpu_count
 
-from dotenv import load_dotenv
+# Получаем порт из переменной окружения или 5015
+PORT = 8000
 
-load_dotenv()
+bind = f"0.0.0.0:{PORT}"  # Указываем динамический порт
+worker_class = "uvicorn.workers.UvicornWorker"
+workers = max(2, min(4, cpu_count() // 2))
+threads = 4
 
-# Убедитесь, что порт задан с безопасным значением по умолчанию
-port = os.getenv("FLASK_PORT", "8000")
+timeout = 120
+keepalive = 5
 
-bind = f"0.0.0.0:{port}"
-workers = cpu_count() * 2 + 1  # Динамическое определение количества воркеров
-timeout = 600  # Увеличенное время ожидания
-
-# Логи
 loglevel = "info"
-errorlog = "-"  # Логи ошибок выводятся в stderr
-accesslog = "-"  # Логи доступа выводятся в stdout
-capture_output = True  # Перехватывать вывод stdout/stderr из приложения
+accesslog = "-"
+errorlog = "-"
 
-# Добавляем флаг для предзагрузки приложения
 preload_app = True
+worker_connections = 1000
+max_requests = 500
+max_requests_jitter = 50
+
+preload_app = True
+lifespan = "on"
