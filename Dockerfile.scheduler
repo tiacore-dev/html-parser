@@ -45,6 +45,7 @@ RUN pip install --no-cache-dir -r requirements.scheduler.txt
 
 COPY . .
 
-# Запуск с Xvfb
-CMD ["xvfb-run", "-a", "python", "schedule_run.py"]
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+CMD ["/entrypoint.sh"]
 
