@@ -1,6 +1,5 @@
 # parsers/sp_service_tyumen.py
 
-import logging
 import os
 
 from dotenv import load_dotenv
@@ -10,7 +9,6 @@ from app.parsers.sp_service_base_parser import SPServiceBaseParser
 # Загрузка переменных окружения
 load_dotenv()
 
-logger = logging.getLogger("parser")
 
 # Конкретный парсер для СП-Сервис Тюмень
 

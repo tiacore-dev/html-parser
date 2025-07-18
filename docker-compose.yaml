@@ -1,26 +1,49 @@
 services:
+
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
     restart: always
+    container_name: web
     tty: true
     stdin_open: true
-
+    env_file:
+      - .env
+    ports:
+      - "${PORT}:8000"
+    command: gunicorn -c gunicorn.conf.py run:app
     environment:
       - HTTP_PROXY=
       - HTTPS_PROXY=
-      - DISPLAY=:99
+    networks:
+      - parser_network
 
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.scheduler
+    restart: always
+    container_name: scheduler
+    tty: true
+    stdin_open: true
+
+    env_file:
+      - .env
+    environment:
+      - DISPLAY=:99
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
-    env_file:
-      - .env
-
     volumes:
       - type: tmpfs
         target: /tmp
     network_mode: host
 
 
+networks:
+  parser_network:
+    #external: true
+    driver: bridge

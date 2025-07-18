@@ -1,19 +1,17 @@
 # parsers/sib_express.py
 
-import logging
 import os
 
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+from loguru import logger
 
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import clean_html
 
 # Загрузка переменных окружения
 load_dotenv()
-
-logger = logging.getLogger("parser")
 
 
 class AvisLogisticsParser(BaseParser):
@@ -138,5 +136,9 @@ class AvisLogisticsParser(BaseParser):
             if len(event) > 0 and event["status"] == "Доставлено":
                 receiver_info = info[-1]
                 if receiver_info["receiver_name"]:
-                    result = {"date": event["date"], "receipient": receiver_info["receiver_name"], "Status": "Доставлено"}
+                    result = {
+                        "date": event["date"],
+                        "receipient": receiver_info["receiver_name"],
+                        "status": "Доставлено",
+                    }
         return result

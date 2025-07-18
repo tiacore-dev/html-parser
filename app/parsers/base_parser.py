@@ -1,9 +1,7 @@
 # Базовый класс для всех парсеров
-import logging
 
 from bs4 import BeautifulSoup
-
-logger = logging.getLogger("parser")
+from loguru import logger
 
 
 class BaseParser:

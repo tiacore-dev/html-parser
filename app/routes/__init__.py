@@ -1,13 +1,7 @@
-from flask import Flask
+from fastapi import FastAPI
 
-from .account_route import account_bp
-from .info_route import info_bp
-from .login_route import login_bp
-from .logs_route import logs_bp
+from .get_results_route import parse_router
 
 
-def register_routes(app: Flask):
-    app.register_blueprint(login_bp)
-    app.register_blueprint(account_bp)
-    app.register_blueprint(logs_bp)
-    app.register_blueprint(info_bp)
+def register_routes(app: FastAPI):
+    app.include_router(parse_router, prefix="/api", tags=["Parses"])

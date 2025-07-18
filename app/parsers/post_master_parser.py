@@ -1,14 +1,13 @@
-import logging
 import os
 
 import requests
 from dotenv import load_dotenv
+from loguru import logger
 
 from app.parsers.base_parser import BaseParser
 
 # Настройка логирования
 
-logger = logging.getLogger("parser")
 
 # Загрузка переменных окружения
 load_dotenv()
@@ -33,9 +32,7 @@ class PostMasterParser(BaseParser):
     def parse(self, orderno):
         try:
             response = self.get_html(orderno)
-            logger.info(
-                f"""{self.name}. Полученные данные для заказа {orderno}: {response}"""
-            )
+            logger.info(f"""{self.name}. Полученные данные для заказа {orderno}: {response}""")
             info = []
             # Обработка данных из JSON
             if isinstance(response, list):
@@ -51,11 +48,7 @@ class PostMasterParser(BaseParser):
                 logger.info(f"{self.name}. Распарсенные данные: {info}")
                 return info
             else:
-                logger.error(
-                    f"""{self.name}. Неожиданный формат ответа для заказа {orderno}: {
-                        response
-                    }"""
-                )
+                logger.error(f"""{self.name}. Неожиданный формат ответа для заказа {orderno}: {response}""")
                 return None
         except Exception as e:
             logger.error(f"""{self.name}. Ошибка при обработке заказа {orderno}: {e}""")

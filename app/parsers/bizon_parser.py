@@ -1,16 +1,14 @@
-import logging
 import os
 
 import requests
 from bs4 import BeautifulSoup, Tag
 from dotenv import load_dotenv
+from loguru import logger
 
 from app.parsers.base_parser import BaseParser
 
 # Загрузка переменных окружения
 load_dotenv()
-
-logger = logging.getLogger("parser")
 
 
 class BizonExpressParser(BaseParser):

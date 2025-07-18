@@ -1,19 +1,17 @@
 # parsers/rasstoyaniya_net.py
 
-import logging
 import os
 
 import requests
 from bs4 import BeautifulSoup, Tag
 from dotenv import load_dotenv
+from loguru import logger
 
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import clean_html
 
 # Загрузка переменных окружения
 load_dotenv()
-
-logger = logging.getLogger("parser")
 
 
 class RasstoyaniyaNetParser(BaseParser):

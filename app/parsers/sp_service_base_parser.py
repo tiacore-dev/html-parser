@@ -1,14 +1,12 @@
 # parsers/sp_service_ekaterinburg.py
 
-import logging
 
 import requests
 from bs4 import BeautifulSoup, Tag
+from loguru import logger
 
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import clean_html
-
-logger = logging.getLogger("parser")
 
 
 class SPServiceBaseParser(BaseParser):

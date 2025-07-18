@@ -34,12 +34,10 @@ RUN GECKO_VERSION="v0.36.0" && \
     mv geckodriver /usr/local/bin/ && chmod +x /usr/local/bin/geckodriver
 
 # Установка Python-зависимостей
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.scheduler.txt .
+RUN pip install --no-cache-dir -r requirements.scheduler.txt
 
 COPY . .
 
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
-
-CMD ["/start.sh"]
+# Запуск с Xvfb
+CMD ["sh", "-c", "rm -f /tmp/.X99-lock && Xvfb :99 -screen 0 1920x1080x24 & python schedule_run.py"]

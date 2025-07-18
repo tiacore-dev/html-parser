@@ -1,7 +1,7 @@
-import logging
 import os
 
 from dotenv import load_dotenv
+from loguru import logger
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 
@@ -10,8 +10,6 @@ from app.utils.helpers import create_firefox_driver
 
 # Загрузка переменных окружения
 load_dotenv()
-
-logger = logging.getLogger("parser")
 
 
 class ArsexpressParser(BaseParser):

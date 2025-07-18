@@ -1,17 +1,12 @@
 import json
-import logging
 import os
 
 import requests
 from dotenv import load_dotenv
+from loguru import logger
 
 load_dotenv()
-logger = logging.getLogger("parser")
 
-# Установка уровня логирования
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
 
 token = os.getenv("TOKEN")
 user_key = os.getenv("USER_KEY")
@@ -34,14 +29,10 @@ def get_orders(customer) -> dict:
         logger.info(f"Успешно получены заказы для клиента {customer}.")
         return response.json()
     except requests.exceptions.Timeout:
-        logger.error(
-            f"Превышено время ожидания при запросе заказов для клиента {customer}."
-        )
+        logger.error(f"Превышено время ожидания при запросе заказов для клиента {customer}.")
         return {"error": "Timeout error"}
     except requests.exceptions.RequestException as e:
-        logger.error(
-            f"""Ошибка запроса при получении заказов для клиента {customer}: {e}"""
-        )
+        logger.error(f"""Ошибка запроса при получении заказов для клиента {customer}: {e}""")
         return {"error": str(e)}
     except json.JSONDecodeError as e:
         logger.error(f"Ошибка декодирования JSON для клиента {customer}: {e}")
@@ -70,9 +61,7 @@ def set_orders(info, order_id, name):
     try:
         response = requests.post(url, headers=headers, json=data, timeout=300)
         response.raise_for_status()
-        logger.info(
-            f"""{name}.Ответ сервера: {response.status_code}, {response.text}"""
-        )
+        logger.info(f"""{name}.Ответ сервера: {response.status_code}, {response.text}""")
         response_text = json.loads(response.text)
         if response_text.get("error") is False:
             logger.info(
@@ -90,12 +79,8 @@ def set_orders(info, order_id, name):
             для заказа {order_id} для сервиса {name}."""
         )
     except requests.exceptions.RequestException as e:
-        logger.error(
-            f"""Ошибка запроса при установке статуса для заказа {order_id}: {e}"""
-        )
+        logger.error(f"""Ошибка запроса при установке статуса для заказа {order_id}: {e}""")
     except json.JSONDecodeError as e:
         logger.error(
-            f"""Ошибка декодирования JSON ответа при установке статуса для заказа {
-                order_id
-            } для сервиса {name}: {e}"""
+            f"""Ошибка декодирования JSON ответа при установке статуса для заказа {order_id} для сервиса {name}: {e}"""
         )

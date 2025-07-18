@@ -1,7 +1,7 @@
-import logging
 import os
 
 from dotenv import load_dotenv
+from loguru import logger
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -11,8 +11,6 @@ from app.parsers.base_parser import BaseParser
 from app.utils.helpers import create_firefox_driver
 
 load_dotenv()
-
-logger = logging.getLogger("parser")
 
 
 class VIPMailUfaParser(BaseParser):
@@ -44,9 +42,7 @@ class VIPMailUfaParser(BaseParser):
             table = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "show_tracks"))
             )
-            logger.info(
-                f"{self.name}. Таблица с результатами успешно найдена: {table}."
-            )
+            logger.info(f"{self.name}. Таблица с результатами успешно найдена: {table}.")
 
             # Извлекаем данные из таблицы
             rows = table.find_elements(By.TAG_NAME, "tr")[1:]  # Пропускаем заголовок
@@ -61,14 +57,10 @@ class VIPMailUfaParser(BaseParser):
                     }
                 )
 
-            logger.info(
-                f"{self.name}. Данные отслеживания успешно извлечены: {results}"
-            )
+            logger.info(f"{self.name}. Данные отслеживания успешно извлечены: {results}")
             return results
         except TimeoutException as e:
-            logger.error(
-                f"""{self.name}. Элемент не найден для заказа {orderno}: {e}"""
-            )
+            logger.error(f"""{self.name}. Элемент не найден для заказа {orderno}: {e}""")
             return None
         except Exception as e:
             logger.error(f"""{self.name}. Ошибка при обработке заказа {orderno}: {e}""")
