@@ -10,4 +10,3 @@ from config import Settings
 class SPServiceEkaterinburgParser(SPServiceBaseParser):
     name = "СП-Сервис Екатеринбург"
     url = Settings.URL_EKATERINBURG
-    referer_suffix = "52/tracking"

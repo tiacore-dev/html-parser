@@ -24,29 +24,29 @@ class SibExpressParser(BaseParser):
             driver.get(self.url)
             wait = WebDriverWait(driver, 15)
 
-            # Ввод номера накладной
             input_field = wait.until(EC.presence_of_element_located((By.NAME, "name")))
             input_field.clear()
             input_field.send_keys(orderno)
 
-            # Выбор вкладки "1"
-            tab_radio = driver.find_element(By.CSS_SELECTOR, "input[name='tab'][value='1']")
-            tab_radio.click()
+            # Удаляем клик по скрытому input[name='tab']
 
             # Отправка формы
             submit_button = driver.find_element(By.CSS_SELECTOR, "form button[type='submit']")
             submit_button.click()
 
-            # Ожидание появления таблицы или сообщения об ошибке
-            wait.until(lambda d: "Не найдено" in d.page_source or d.find_elements(By.TAG_NAME, "table"))
+            # Ждём таблицу или сообщение об отсутствии
+            wait.until(lambda d: "не найдено" in d.page_source.lower() or d.find_elements(By.TAG_NAME, "table"))
 
-            # Проверка на отсутствие данных
-            if "Не найдено" in driver.page_source:
-                logger.error(f"{self.name}. Заказ {orderno} не найден.")
+            if "не найдено" in driver.page_source.lower():
+                logger.warning(f"{self.name}. Заказ {orderno} не найден.")
                 return None
 
-            # Получение таблицы
-            table = driver.find_element(By.TAG_NAME, "table")
+            tables = driver.find_elements(By.TAG_NAME, "table")
+            if not tables:
+                logger.warning(f"{self.name}. Таблица не найдена для заказа {orderno}.")
+                return None
+
+            table = tables[0]
             rows = table.find_elements(By.TAG_NAME, "tr")
 
             data = {}
@@ -57,6 +57,10 @@ class SibExpressParser(BaseParser):
                     value = cells[1].text.strip()
                     data[key] = value
 
+            if not data:
+                logger.warning(f"{self.name}. Таблица пуста для заказа {orderno}")
+                return None
+
             logger.info(f"{self.name}. Полученные данные для заказа {orderno}: {data}")
             return data
 
@@ -64,10 +68,10 @@ class SibExpressParser(BaseParser):
             logger.error(f"{self.name}. Timeout при ожидании элементов для заказа {orderno}")
             return None
         except NoSuchElementException as e:
-            logger.error(f"{self.name}. Элемент не найден при обработке заказа {orderno}: {e}")
+            logger.error(f"{self.name}. Элемент не найден при заказе {orderno}: {e}")
             return None
         except Exception as e:
-            logger.error(f"{self.name}. Ошибка при обработке заказа {orderno}: {e}")
+            logger.error(f"{self.name}. Ошибка при заказе {orderno}: {e}")
             return None
         finally:
             driver.quit()

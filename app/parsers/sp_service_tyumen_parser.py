@@ -10,4 +10,3 @@ from config import Settings
 class SPServiceTyumenParser(SPServiceBaseParser):
     name = "СП-Сервис Тюмень"
     url = Settings.URL_TYUMEN
-    referer_suffix = "178/tracking"

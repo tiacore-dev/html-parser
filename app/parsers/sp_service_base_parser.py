@@ -1,5 +1,5 @@
 from loguru import logger
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -19,38 +19,35 @@ class SPServiceBaseParser(BaseParser):
         try:
             full_url = f"{self.url}?orderno={orderno}&singlebutton=submit"
             driver.get(full_url)
-
             logger.info(f"{self.name}. Текущий URL: {driver.current_url}")
             logger.info(f"Заголовок страницы: {driver.title}")
 
-            # Ждём появления таблицы до 15 секунд
             wait = WebDriverWait(driver, 15)
-            table = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "table.table-striped")))
-            rows = table.find_elements(By.TAG_NAME, "tr")
+            main_table = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.main-table")))
 
-            if "не найден" in driver.page_source.lower():
-                logger.warning(f"{self.name}. Заказ {orderno} не найден на странице.")
-                return None
-
+            rows = main_table.find_elements(By.CSS_SELECTOR, "div.row")
             data = {}
+
             for row in rows:
-                tds = row.find_elements(By.TAG_NAME, "td")
-                if len(tds) >= 2:
-                    key = tds[0].text.strip().rstrip(":")
-                    value = tds[1].text.strip()
+                # ищем ячейки ключ:значение
+                cols = row.find_elements(By.CSS_SELECTOR, "div.col-8.font-14.pt-0.pb-2, div.col-4.font-14.pt-0.pb-2")
+                if len(cols) == 2:
+                    key = cols[0].text.strip().rstrip(":")
+                    value = cols[1].text.strip()
                     data[key] = value
+
+            if not data:
+                logger.warning(f"{self.name}. Нет данных по заказу {orderno}")
+                return None
 
             logger.info(f"{self.name}. Полученные данные для заказа {orderno}: {data}")
             return data
 
-        except TimeoutException as e:
-            logger.error(f"{self.name}. Таймаут при заказе {orderno}: {e}")
-            return None
-        except NoSuchElementException as e:
-            logger.error(f"{self.name}. Элемент не найден: {e}")
+        except TimeoutException:
+            logger.error(f"{self.name}. Таймаут при заказе {orderno}: элемент main-table не найден.")
             return None
         except Exception as e:
-            logger.error(f"{self.name}. Ошибка при обработке заказа {orderno}: {e}")
+            logger.error(f"{self.name}. Ошибка при парсинге заказа {orderno}: {e}")
             return None
         finally:
             driver.quit()
