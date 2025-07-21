@@ -8,11 +8,11 @@ from app.parsers.base_parser import BaseParser
 from app.utils.helpers import create_firefox_driver
 
 # Загрузка переменных окружения
-from config import Settings
+from config import settings
 
 
 class PlexPostParser(BaseParser):
-    url = Settings.URL_PLEX_POST
+    url = settings.URL_PLEX_POST
     name = "Плекс Пост"
     DEFAULT_WAIT_TIME = 30
 

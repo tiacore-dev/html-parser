@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     URL_POST_MASTER: str
     URL_PLEX_POST: str
 
+    URL_SVS_GET: str
+    URL_SVS_SET: str
+
     # For SVS
     TOKEN: str
     USER_KEY: str
@@ -28,3 +31,6 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         extra = "ignore"
+
+
+settings = Settings()  # type: ignore

@@ -1,18 +1,18 @@
 from aiogram import Bot
 from loguru import logger
 
-from config import Settings
+from config import settings
 
 
 async def send_telegram_message(text, parse_mode):
     """
     Отправляет результат анализа в Telegram.
     """
-    bot_token = Settings.BOT_TOKEN
+    bot_token = settings.BOT_TOKEN
     bot = Bot(bot_token)
 
     try:
-        await bot.send_message(chat_id=Settings.CHAT_ID, text=text, parse_mode=parse_mode)
+        await bot.send_message(chat_id=settings.CHAT_ID, text=text, parse_mode=parse_mode)
         logger.info("Уведомления успешно отправлены")
     except Exception as e:
         logger.error(

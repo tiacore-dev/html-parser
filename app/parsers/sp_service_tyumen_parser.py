@@ -4,12 +4,12 @@
 from app.parsers.sp_service_base_parser import SPServiceBaseParser
 
 # Загрузка переменных окружения
-from config import Settings
+from config import settings
 
 
 class SPServiceTyumenParser(SPServiceBaseParser):
     name = "СП-Сервис Тюмень"
-    url = Settings.URL_TYUMEN
+    url = settings.URL_TYUMEN
     # Куки непосредственно в запросе
     cookies = {
         "PHPSESSID": "pd0apr1en20lsphs6r2f5ghp6r",
