@@ -112,5 +112,11 @@ def handle_error(order_number, error):
 
 
 async def parser_main():
-    logger.info("🚀 Запуск обработки всех партнёров")
-    await asyncio.gather(*[process_orders_for_partner(partner_id, parser) for partner_id, parser in partners.items()])
+    logger.info("🚀 Последовательная обработка всех партнёров")
+    for partner_id, parser in partners.items():
+        try:
+            logger.info(f"➡️ Начало обработки: {parser.name}")
+            await process_orders_for_partner(partner_id, parser)
+            await asyncio.sleep(1)
+        except Exception as e:
+            logger.exception(f"❌ Ошибка при обработке партнёра {partner_id}: {e}")
