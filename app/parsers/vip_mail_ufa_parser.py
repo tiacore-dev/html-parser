@@ -23,13 +23,21 @@ class VIPMailUfaParser(BaseParser):
         raise NotImplementedError(f"Метод 'get_html' не реализован в {self.name}.")
 
     def parse(self, orderno):
-        driver = create_firefox_driver()
-        driver.get(self.url)
+        try:
+            driver = create_firefox_driver()
+        except Exception as e:
+            logger.error(f"Ошибка создания драйвера: {e}")
+            return None
+
+        try:
+            driver.get(self.url)
+        except Exception as e:
+            logger.error(f"Ошибка при driver.get(): {e}")
+            return None
+
         try:
             # Вводим номер накладной
-            number_field = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(
-                EC.presence_of_element_located((By.NAME, "number"))
-            )
+            number_field = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.NAME, "number")))
             number_field.send_keys(orderno)
             # logger.info(f"Номер накладной {tracking_number} введен.")
 
@@ -39,9 +47,7 @@ class VIPMailUfaParser(BaseParser):
             # logger.info("Кнопка отправки нажата.")
 
             # Ждем появления таблицы с результатами
-            table = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(
-                EC.presence_of_element_located((By.CLASS_NAME, "show_tracks"))
-            )
+            table = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.CLASS_NAME, "show_tracks")))
             logger.info(f"{self.name}. Таблица с результатами успешно найдена: {table}.")
 
             # Извлекаем данные из таблицы

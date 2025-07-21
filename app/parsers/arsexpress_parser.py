@@ -22,8 +22,18 @@ class ArsexpressParser(BaseParser):
         raise NotImplementedError(f"Метод 'get_html' не реализован в {self.name}.")
 
     def parse(self, orderno):
-        driver = create_firefox_driver()
-        driver.get(f"{self.url}{orderno}")
+        try:
+            driver = create_firefox_driver()
+        except Exception as e:
+            logger.error(f"Ошибка создания драйвера: {e}")
+            return None
+
+        try:
+            driver.get(f"{self.url}{orderno}")
+        except Exception as e:
+            logger.error(f"Ошибка при driver.get(): {e}")
+            return None
+
         try:
             logger.info(f"Текущий URL: {driver.current_url}")
             logger.info(f"Заголовок страницы: {driver.title}")
