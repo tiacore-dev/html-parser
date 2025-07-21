@@ -1,13 +1,7 @@
-import os
-
-from dotenv import load_dotenv
-
-load_dotenv()
-
-DATABASE_URL = os.getenv("WEB_DATABASE_URL")
+from config import Settings
 
 TORTOISE_ORM = {
-    "connections": {"default": DATABASE_URL},
+    "connections": {"default": Settings.DATABASE_WEB_URL},
     "apps": {
         "models": {
             # Укажите только модуль

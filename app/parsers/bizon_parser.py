@@ -2,13 +2,11 @@ import os
 
 import requests
 from bs4 import BeautifulSoup, Tag
-from dotenv import load_dotenv
 from loguru import logger
 
 from app.parsers.base_parser import BaseParser
 
 # Загрузка переменных окружения
-load_dotenv()
 
 
 class BizonExpressParser(BaseParser):
@@ -87,6 +85,6 @@ class BizonExpressParser(BaseParser):
             result = {
                 "date": f"{info['Дата вручения']} {info['Время вручения']}",
                 "receipient": info["Инфо о доставке"],
-                "Status": info["Статус"],
+                "status": info["Статус"],
             }
         return result

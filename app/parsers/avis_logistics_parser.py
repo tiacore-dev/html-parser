@@ -1,22 +1,20 @@
 # parsers/sib_express.py
 
-import os
 
 import requests
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
 from loguru import logger
 
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import clean_html
+from config import Settings
 
 # Загрузка переменных окружения
-load_dotenv()
 
 
 class AvisLogisticsParser(BaseParser):
     name = "Авис-Логистик"
-    url = os.getenv("URL_AVIS_LOGISTICS")
+    url = Settings.URL_AVIS_LOGISTICS
     # Куки
     cookies = {
         "PHPSESSID": "uur2h0fp5ks9hub2dnn462j5kq",

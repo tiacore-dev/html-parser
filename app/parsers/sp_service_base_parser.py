@@ -87,6 +87,6 @@ class SPServiceBaseParser(BaseParser):
             return {
                 "date": f"{info['Date parcel received']} {info['Time parcel received']}",
                 "receipient": info["Delivery info"],
-                "Status": info["Status"],
+                "status": info["Status"],
             }
         return None

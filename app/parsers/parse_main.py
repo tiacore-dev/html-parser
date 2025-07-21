@@ -4,6 +4,7 @@ import requests
 from loguru import logger
 
 from app.database.models import ParsingLog
+from app.handlers.telegram_handler import send_report_to_telegram
 from app.parsers.arsexpress_parser import ArsexpressParser
 from app.parsers.avis_logistics_parser import AvisLogisticsParser
 from app.parsers.bizon_parser import BizonExpressParser
@@ -45,32 +46,25 @@ partners = {
 async def process_orders_for_partner(partner_id, parser):
     logger.info(f"🔍 Обработка заказов для партнёра: {parser.name} ({partner_id})")
     orders = get_orders(partner_id)
+
+    total = 0
+    success = 0
+    failed = 0
+
     if not orders:
         logger.warning(f"Нет заказов для партнёра {parser.name}")
-        await save_log(
-            partner_id,
-            None,
-            "",
-            parser.name,
-            success=False,
-            error_message="Нет заказов",
-        )
-        return
+        await save_log(partner_id, None, "", parser.name, success=False, error_message="Нет заказов")
+        return {"partner_id": partner_id, "name": parser.name, "total": 0, "success": 0, "failed": 0}
 
     for order in orders:
+        total += 1
         order_id = order.get("id")
         order_number = order.get("number")
 
         if not order_number:
             logger.warning(f"Order number is missing for partner {partner_id}.")
-            await save_log(
-                partner_id,
-                order_id,
-                None,
-                parser.name,
-                success=False,
-                error_message="Отсутствует номер заказа",
-            )
+            await save_log(partner_id, order_id, None, parser.name, success=False, error_message="Отсутствует номер заказа")
+            failed += 1
             continue
 
         try:
@@ -79,6 +73,9 @@ async def process_orders_for_partner(partner_id, parser):
 
             if result:
                 set_orders(result, order_id, parser.name)
+                success += 1
+            else:
+                failed += 1
 
             await save_log(
                 partner_id,
@@ -100,8 +97,17 @@ async def process_orders_for_partner(partner_id, parser):
                 success=False,
                 error_message=str(e),
             )
+            failed += 1
 
         await asyncio.sleep(15)
+
+    return {
+        "partner_id": partner_id,
+        "name": parser.name,
+        "total": total,
+        "success": success,
+        "failed": failed,
+    }
 
 
 def handle_error(order_number, error):
@@ -113,10 +119,23 @@ def handle_error(order_number, error):
 
 async def parser_main():
     logger.info("🚀 Последовательная обработка всех партнёров")
+    summary = []
+
     for partner_id, parser in partners.items():
         try:
-            logger.info(f"➡️ Начало обработки: {parser.name}")
-            await process_orders_for_partner(partner_id, parser)
-            await asyncio.sleep(1)
+            result = await process_orders_for_partner(partner_id, parser)
+            summary.append(result)
         except Exception as e:
             logger.exception(f"❌ Ошибка при обработке партнёра {partner_id}: {e}")
+            summary.append(
+                {
+                    "partner_id": partner_id,
+                    "name": parser.name,
+                    "total": 0,
+                    "success": 0,
+                    "failed": 0,
+                    "error": str(e),
+                }
+            )
+
+    await send_report_to_telegram(summary)

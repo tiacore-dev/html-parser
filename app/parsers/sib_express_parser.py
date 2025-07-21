@@ -1,17 +1,15 @@
 # parsers/sib_express.py
 
 import json
-import os
 
 import requests
 from bs4 import BeautifulSoup, Tag
-from dotenv import load_dotenv
 from loguru import logger
 
 from app.parsers.base_parser import BaseParser
 
 # Загрузка переменных окружения
-load_dotenv()
+from config import Settings
 
 
 def get_csrf_token(session, url):
@@ -26,7 +24,7 @@ def get_csrf_token(session, url):
 
 class SibExpressParser(BaseParser):
     name = "Сибирский Экспресс"
-    url = os.getenv("URL_SIB_EXPRESS")
+    url = Settings.URL_SIB_EXPRESS
     # Куки
     cookies = {
         "_ym_uid": "1734680388574908198",
@@ -136,6 +134,6 @@ class SibExpressParser(BaseParser):
                     "date": key,
                     # Берем третье слово, если оно есть
                     "receipient": rec[2] if len(rec) > 1 else rec[1],
-                    "Status": "Доставлено",
+                    "status": "Доставлено",
                 }
         return result

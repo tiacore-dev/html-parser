@@ -2,14 +2,9 @@ import json
 import os
 
 import requests
-from dotenv import load_dotenv
 from loguru import logger
 
-load_dotenv()
-
-
-token = os.getenv("TOKEN")
-user_key = os.getenv("USER_KEY")
+from config import Settings
 
 
 def get_orders(customer) -> dict:
@@ -51,7 +46,7 @@ def set_orders(info, order_id, name):
     headers = {"Content-Type": "application/json"}
 
     data = {
-        "authToken": {"userkey": f"{user_key}", "token": f"{token}"},
+        "authToken": {"userkey": f"{Settings.USER_KEY}", "token": f"{Settings.TOKEN}"},
         "parcelId": f"{order_id}",
         "recDate": info["date"],
         "recName": info["receipient"],
@@ -81,6 +76,4 @@ def set_orders(info, order_id, name):
     except requests.exceptions.RequestException as e:
         logger.error(f"""Ошибка запроса при установке статуса для заказа {order_id}: {e}""")
     except json.JSONDecodeError as e:
-        logger.error(
-            f"""Ошибка декодирования JSON ответа при установке статуса для заказа {order_id} для сервиса {name}: {e}"""
-        )
+        logger.error(f"""Ошибка декодирования JSON ответа при установке статуса для заказа {order_id} для сервиса {name}: {e}""")

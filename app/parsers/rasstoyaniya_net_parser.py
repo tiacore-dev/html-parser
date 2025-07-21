@@ -4,14 +4,12 @@ import os
 
 import requests
 from bs4 import BeautifulSoup, Tag
-from dotenv import load_dotenv
 from loguru import logger
 
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import clean_html
 
 # Загрузка переменных окружения
-load_dotenv()
 
 
 class RasstoyaniyaNetParser(BaseParser):
@@ -105,6 +103,6 @@ class RasstoyaniyaNetParser(BaseParser):
             result = {
                 "date": f"{info['Дата доставки']}",
                 "receipient": f"{info['Получатель']}",
-                "Status": f"{info['Статус']}",
+                "status": f"{info['Статус']}",
             }
         return result

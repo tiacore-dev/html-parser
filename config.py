@@ -1,20 +1,30 @@
-import os
-
-from dotenv import load_dotenv
-
-load_dotenv()
+from pydantic_settings import BaseSettings
 
 
-class Config:
-    DATABASE_URL = os.getenv("DATABASE_URL")
-    SECRET_KEY = os.getenv("SECRET_KEY")
-    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-    JWT_ACCESS_TOKEN_EXPIRES = 3600
-    API_KEY = os.getenv("API_KEY")
-    LOGIN = os.getenv("LOGIN")
-    PASSWORD = os.getenv("PASSWORD")
-    # Настройки APScheduler
-    SCHEDULER_API_ENABLED = True
-    SCHEDULER_JOBSTORES = {"default": {"type": "memory"}}
-    SCHEDULER_EXECUTORS = {"default": {"type": "threadpool", "max_workers": 10}}
-    SCHEDULER_JOB_DEFAULTS = {"coalesce": False, "max_instances": 1}
+class Settings(BaseSettings):
+    DATABASE_WEB_URL: str
+    DATABASE_SCHEDULER_URL: str
+
+    API_KEY: str
+
+    CHAT_ID: str
+    BOT_TOKEN: str
+
+    # URLs
+
+    URL_ARSEXPRESS: str
+    URL_AVIS_LOGISTICS: str
+    URL_TYUMEN: str
+    URL_EKATERINBURG: str
+    URL_SIB_EXPRESS: str
+    URL_POST_MASTER: str
+    URL_PLEX_POST: str
+
+    # For SVS
+    TOKEN: str
+    USER_KEY: str
+
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        extra = "ignore"

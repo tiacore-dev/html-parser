@@ -1,6 +1,3 @@
-import os
-
-from dotenv import load_dotenv
 from loguru import logger
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
@@ -11,11 +8,11 @@ from app.parsers.base_parser import BaseParser
 from app.utils.helpers import create_firefox_driver
 
 # Загрузка переменных окружения
-load_dotenv()
+from config import Settings
 
 
 class PlexPostParser(BaseParser):
-    url = url = os.getenv("URL_PLEX_POST", "")
+    url = Settings.URL_PLEX_POST
     name = "Плекс Пост"
     DEFAULT_WAIT_TIME = 30
 
@@ -28,9 +25,7 @@ class PlexPostParser(BaseParser):
         driver.get(self.url)
         try:
             # 1) Ждем появления поля ввода: id="tn", name="codes"
-            code_field = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(
-                EC.presence_of_element_located((By.NAME, "codes"))
-            )
+            code_field = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.NAME, "codes")))
             code_field.clear()
             code_field.send_keys(orderno)
 
@@ -39,9 +34,7 @@ class PlexPostParser(BaseParser):
             submit_button.click()
 
             # 3) Ждем, пока появится блок с результатом: id="tracking-results"
-            result_block = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(
-                EC.presence_of_element_located((By.ID, "tracking-results"))
-            )
+            result_block = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.ID, "tracking-results")))
 
             # 4) «Ленивый» вариант: берем весь текст из result_block
             all_text = result_block.text

@@ -1,19 +1,16 @@
-import os
-
-from dotenv import load_dotenv
 from loguru import logger
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import create_firefox_driver
+from config import Settings
 
 # Загрузка переменных окружения
-load_dotenv()
 
 
 class ArsexpressParser(BaseParser):
-    url = os.getenv("URL_ARSEXPRESS", "")
+    url = Settings.URL_ARSEXPRESS
     name = "Арсэкспресс"
     DEFAULT_WAIT_TIME = 30
 

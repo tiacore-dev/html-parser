@@ -1,21 +1,16 @@
-import os
-
 import requests
-from dotenv import load_dotenv
 from loguru import logger
 
 from app.parsers.base_parser import BaseParser
 
 # Настройка логирования
-
-
 # Загрузка переменных окружения
-load_dotenv()
+from config import Settings
 
 
 class PostMasterParser(BaseParser):
     name = "Пост Мастер"
-    url = os.getenv("URL_POST_MASTER", "")
+    url = Settings.URL_POST_MASTER
 
     def get_html(self, orderno):
         custom_headers = {

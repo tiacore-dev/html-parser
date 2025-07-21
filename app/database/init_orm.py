@@ -1,16 +1,11 @@
-import os
-
-from dotenv import load_dotenv
 from loguru import logger
 from tortoise import Tortoise
 
-load_dotenv()
-
-DATABASE_URL = os.getenv("SCHEDULER_DATABASE_URL")
+from config import Settings
 
 
 async def init_db():
     logger.info("🔌 Инициализация Tortoise ORM без FastAPI")
-    await Tortoise.init(db_url=DATABASE_URL, modules={"models": ["app.database.models"]})
+    await Tortoise.init(db_url=Settings.DATABASE_SCHEDULER_URL, modules={"models": ["app.database.models"]})
 
     logger.info("✅ База данных готова")
