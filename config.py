@@ -1,36 +1,31 @@
-from pydantic_settings import BaseSettings
+# config.py
+
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-class Settings(BaseSettings):
-    DATABASE_WEB_URL: str
-    DATABASE_SCHEDULER_URL: str
+class Settings:
+    DATABASE_WEB_URL = os.getenv("DATABASE_WEB_URL", "")
+    DATABASE_SCHEDULER_URL = os.getenv("DATABASE_SCHEDULER_URL", "")
 
-    API_KEY: str
+    API_KEY = os.getenv("API_KEY", "")
 
-    CHAT_ID: str
-    BOT_TOKEN: str
+    CHAT_ID = os.getenv("CHAT_ID", "")
+    BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 
-    # URLs
+    URL_ARSEXPRESS = os.getenv("URL_ARSEXPRESS", "")
+    URL_AVIS_LOGISTICS = os.getenv("URL_AVIS_LOGISTICS", "")
+    URL_TYUMEN = os.getenv("URL_TYUMEN", "")
+    URL_EKATERINBURG = os.getenv("URL_EKATERINBURG", "")
+    URL_SIB_EXPRESS = os.getenv("URL_SIB_EXPRESS", "")
+    URL_POST_MASTER = os.getenv("URL_POST_MASTER", "")
+    URL_PLEX_POST = os.getenv("URL_PLEX_POST", "")
 
-    URL_ARSEXPRESS: str
-    URL_AVIS_LOGISTICS: str
-    URL_TYUMEN: str
-    URL_EKATERINBURG: str
-    URL_SIB_EXPRESS: str
-    URL_POST_MASTER: str
-    URL_PLEX_POST: str
+    URL_SVS_GET = os.getenv("URL_SVS_GET", "")
+    URL_SVS_SET = os.getenv("URL_SVS_SET", "")
 
-    URL_SVS_GET: str
-    URL_SVS_SET: str
-
-    # For SVS
-    TOKEN: str
-    USER_KEY: str
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "ignore"
-
-
-settings = Settings()  # type: ignore
+    TOKEN = os.getenv("TOKEN", "")
+    USER_KEY = os.getenv("USER_KEY", "")

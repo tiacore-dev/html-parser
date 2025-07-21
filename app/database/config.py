@@ -1,7 +1,7 @@
-from config import settings
+from config import Settings
 
 TORTOISE_ORM = {
-    "connections": {"default": settings.DATABASE_WEB_URL},
+    "connections": {"default": Settings.DATABASE_WEB_URL},
     "apps": {
         "models": {
             # Укажите только модуль

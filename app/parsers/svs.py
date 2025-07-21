@@ -3,7 +3,7 @@ import json
 import requests
 from loguru import logger
 
-from config import settings
+from config import Settings
 
 
 def get_orders(customer) -> dict:
@@ -13,7 +13,7 @@ def get_orders(customer) -> dict:
     :param customer: Имя клиента
     :return: JSON-ответ с заказами или ошибка
     """
-    url = settings.URL_SVS_GET
+    url = Settings.URL_SVS_GET
     data = {"customer": customer}
     headers = {"Content-Type": "application/json"}
 
@@ -41,11 +41,11 @@ def set_orders(info, order_id, name):
     :param order_id: Идентификатор заказа
     :return: None
     """
-    url = settings.URL_SVS_SET
+    url = Settings.URL_SVS_SET
     headers = {"Content-Type": "application/json"}
 
     data = {
-        "authToken": {"userkey": f"{settings.USER_KEY}", "token": f"{settings.TOKEN}"},
+        "authToken": {"userkey": f"{Settings.USER_KEY}", "token": f"{Settings.TOKEN}"},
         "parcelId": f"{order_id}",
         "recDate": info["date"],
         "recName": info["receipient"],

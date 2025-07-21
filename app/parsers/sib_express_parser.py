@@ -9,7 +9,7 @@ from loguru import logger
 from app.parsers.base_parser import BaseParser
 
 # Загрузка переменных окружения
-from config import settings
+from config import Settings
 
 
 def get_csrf_token(session, url):
@@ -24,7 +24,7 @@ def get_csrf_token(session, url):
 
 class SibExpressParser(BaseParser):
     name = "Сибирский Экспресс"
-    url = settings.URL_SIB_EXPRESS
+    url = Settings.URL_SIB_EXPRESS
     # Куки
     cookies = {
         "_ym_uid": "1734680388574908198",

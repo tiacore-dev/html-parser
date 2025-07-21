@@ -4,13 +4,13 @@ from selenium.webdriver.common.by import By
 
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import create_firefox_driver
-from config import settings
+from config import Settings
 
 # Загрузка переменных окружения
 
 
 class ArsexpressParser(BaseParser):
-    url = settings.URL_ARSEXPRESS
+    url = Settings.URL_ARSEXPRESS
     name = "Арсэкспресс"
     DEFAULT_WAIT_TIME = 30
 

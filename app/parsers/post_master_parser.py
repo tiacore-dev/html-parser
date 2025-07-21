@@ -5,12 +5,12 @@ from app.parsers.base_parser import BaseParser
 
 # Настройка логирования
 # Загрузка переменных окружения
-from config import settings
+from config import Settings
 
 
 class PostMasterParser(BaseParser):
     name = "Пост Мастер"
-    url = settings.URL_POST_MASTER
+    url = Settings.URL_POST_MASTER
 
     def get_html(self, orderno):
         custom_headers = {
