@@ -1,108 +1,73 @@
-# parsers/rasstoyaniya_net.py
-
-import os
-
-import requests
-from bs4 import BeautifulSoup, Tag
 from loguru import logger
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
 
 from app.parsers.base_parser import BaseParser
-from app.utils.helpers import clean_html
-
-# Загрузка переменных окружения
+from app.utils.helpers import create_firefox_driver
+from config import Settings
 
 
 class RasstoyaniyaNetParser(BaseParser):
     name = "Расстояния нет"
-    url = os.getenv("URL_RASTOYANIYA")
-    # Куки
-    cookies = {
-        "geobase": "a:0:{}",
-        "PHPSESSID": "r4emb86q6607kifd0qe53titc3",
-        "_ym_uid": "1734680291770530560",
-        "_ym_d": "1734680291",
-        "_ym_isad": "2",
-        "lhc_per": '{"vid":"3dy2q6mmldpts6crn3k"}',
-    }
-
-    def get_html(self, orderno):
-        if not self.url:
-            raise ValueError(f"URL для {self.name} не задан. Проверьте переменные окружения.")
-
-        # Параметры формы
-        data = {"FindForm[bill]": orderno}
-        custom_headers = {
-            "origin": "https://www.rasstoyanie.net",
-            "priority": "u=1, i",
-            "referer": self.url,
-            "sec-ch-ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": '"Windows"',
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-origin",
-            "x-requested-with": "XMLHttpRequest",
-        }
-        headers = self._get_headers(custom_headers)
-
-        session = requests.Session()
-
-        try:
-            response = session.post(self.url, data=data, headers=headers, cookies=self.cookies, timeout=30)
-            response.raise_for_status()
-            return response.text
-        except requests.exceptions.RequestException as e:
-            logger.error(f"""{self.name}. Request failed for order {orderno}: {e}""")
-            return None
+    url = Settings.URL_RASTOYANIYA
 
     def parse(self, orderno):
-        html = self.get_html(orderno)
-        if not html:
+        try:
+            driver = create_firefox_driver()
+        except Exception as e:
+            logger.error(f"{self.name}. Ошибка создания драйвера: {e}")
             return None
-        cleaned_html = clean_html(html)
 
         try:
-            soup = BeautifulSoup(cleaned_html, "lxml")
+            # Переход на страницу поиска
+            driver.get(self.url)
 
-            # Извлечение заголовка накладной
-            header = soup.find("h5", class_="find-header")
-            if header:
-                invoice = header.get_text(strip=True)
-            else:
-                logger.error(f"{self.name}.Не удалось найти заголовок накладной для заказа {orderno}.")
-                return None
+            # Ввод номера накладной
+            input_field = driver.find_element(By.NAME, "FindForm[bill]")
+            input_field.clear()
+            input_field.send_keys(orderno)
 
-            # Извлечение данных из таблицы
-            table = soup.find("table", class_="detail-view", id="quick_find")
-            if not table:
-                logger.error(f"{self.name}.Таблица с деталями не найдена для заказа {orderno}.")
-                return None
+            # Отправка формы (обычно кнопка с type="submit")
+            submit_button = driver.find_element(By.CSS_SELECTOR, "form button[type='submit']")
+            submit_button.click()
+
+            # Ждём загрузки таблицы и заголовка
+            driver.implicitly_wait(5)
+
+            # Извлечение заголовка
+            header_elem = driver.find_element(By.CSS_SELECTOR, "h5.find-header")
+            invoice = header_elem.text.strip()
+
+            # Извлечение таблицы
+            table = driver.find_element(By.CSS_SELECTOR, "table.detail-view#quick_find")
+            rows = table.find_elements(By.TAG_NAME, "tr")
 
             data = {"invoice": invoice}
-            if not isinstance(table, Tag):
-                logger.error("Неверный тип: таблица не найдена или не является HTML-тегом")
-                return None
-            rows = table.find_all("tr")
             for row in rows:
-                header_cell = row.find("th")
-                data_cell = row.find("td")
-                if header_cell and data_cell:
-                    key = header_cell.get_text(strip=True).rstrip(":")
-                    value = data_cell.get_text(strip=True)
+                ths = row.find_elements(By.TAG_NAME, "th")
+                tds = row.find_elements(By.TAG_NAME, "td")
+                if ths and tds:
+                    key = ths[0].text.strip().rstrip(":")
+                    value = tds[0].text.strip()
                     data[key] = value
 
-            logger.info(f"""{self.name}. Полученные данные для заказа {orderno}: {data}""")
+            logger.info(f"{self.name}. Полученные данные для заказа {orderno}: {data}")
             return data
-        except Exception as e:
-            logger.error(f"""{self.name}. Ошибка при обработке заказа {orderno}: {e}""")
+
+        except TimeoutException as e:
+            logger.error(f"{self.name}. Таймаут при заказе {orderno}: {e}")
             return None
+        except Exception as e:
+            logger.error(f"{self.name}. Ошибка при обработке заказа {orderno}: {e}")
+            return None
+        finally:
+            driver.quit()
 
     def process_delivered_info(self, info):
-        result = None
-        if (info["Статус"] == "Доставлена" or info["Статус"] == "Доставлено") and info["Получатель"] != "Сдано в ТК":
-            result = {
-                "date": f"{info['Дата доставки']}",
-                "receipient": f"{info['Получатель']}",
-                "status": f"{info['Статус']}",
+        if info.get("Статус") in ("Доставлена", "Доставлено") and info.get("Получатель") != "Сдано в ТК":
+            return {
+                "date": info.get("Дата доставки", ""),
+                "receipient": info.get("Получатель", ""),
+                "status": info.get("Статус", ""),
             }
-        return result
+        return None

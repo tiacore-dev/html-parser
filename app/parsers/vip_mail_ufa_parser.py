@@ -18,10 +18,6 @@ class VIPMailUfaParser(BaseParser):
     name = "ВипМайл Уфа"
     DEFAULT_WAIT_TIME = 30
 
-    def get_html(self, orderno):
-        """Метод не нужен для VIPMailUfaParser."""
-        raise NotImplementedError(f"Метод 'get_html' не реализован в {self.name}.")
-
     def parse(self, orderno):
         try:
             driver = create_firefox_driver()

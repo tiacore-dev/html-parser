@@ -1,136 +1,77 @@
-# parsers/sib_express.py
-
-
-import requests
-from bs4 import BeautifulSoup
 from loguru import logger
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
 
 from app.parsers.base_parser import BaseParser
-from app.utils.helpers import clean_html
+from app.utils.helpers import create_firefox_driver
 from config import Settings
-
-# Загрузка переменных окружения
 
 
 class AvisLogisticsParser(BaseParser):
-    name = "Авис-Логистик"
     url = Settings.URL_AVIS_LOGISTICS
-    # Куки
-    cookies = {
-        "PHPSESSID": "uur2h0fp5ks9hub2dnn462j5kq",
-        "_ga": "GA1.1.1532879673.1739871303",
-        "_ym_uid": "1739871303729443487",
-        "_ym_d": "1739871303",
-        "_ym_isad": "1",
-        "_ym_visorc": "w",
-        "_ga_R2Z36FPB41": "GS1.1.1739874415.2.1.1739874662.0.0.0",
-    }
-
-    def get_html(self, orderno):
-        if not self.url:
-            raise ValueError(f"URL для {self.name} не задан. Проверьте переменные окружения.")
-        session = requests.Session()
-
-        # Параметры формы
-        data = f"trackNumberButton={orderno}"
-
-        # Кастомные заголовки
-        headers = {
-            "Accept": "text/html, */*; q=0.01",
-            "Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
-            "Connection": "keep-alive",
-            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "Origin": "https://avislogistics.ru",
-            "Referer": f"https://avislogistics.ru/?trace={orderno}",
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-origin",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
-            "X-Requested-With": "XMLHttpRequest",
-            "sec-ch-ua": '"Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133"',
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": '"Windows"',
-        }
-
-        try:
-            response = session.post(self.url, data=data, headers=headers, cookies=self.cookies, timeout=30)
-            response.raise_for_status()
-            html = response.text
-
-            if not html:
-                logger.error(f"{self.name}. Не получили html для заказа {orderno}.")
-                return None
-
-            return html
-        except requests.exceptions.RequestException as e:
-            logger.error(f"""{self.name}. Request failed for order {orderno}: {e}""")
-            return None
+    name = "Авис-Логистик"
+    DEFAULT_WAIT_TIME = 30
 
     def parse(self, orderno):
-        html = self.get_html(orderno)
-        if not html:
+        try:
+            driver = create_firefox_driver()
+        except Exception as e:
+            logger.error(f"{self.name}. Ошибка создания драйвера: {e}")
             return None
-        cleaned_html = clean_html(html)
-
-        soup = BeautifulSoup(cleaned_html, "lxml")
-
-        # Проверка на отсутствие данных
-        if "Не найдено" in html:
-            logger.error(f"Ответ не содержит данных для заказа {orderno}.")
-            return None
-
-        data = []
 
         try:
-            # Ищем блоки с событиями (доставка, транзит и т. д.)
-            events_container = soup.find_all("div", class_="window__trace_content")
+            trace_url = f"{self.url}?trace={orderno}"
+            driver.get(trace_url)
 
-            if not events_container:
-                logger.error(f"{self.name}. Данные о заказе {orderno} не найдены.")
+            logger.info(f"{self.name}. Текущий URL: {driver.current_url}")
+            logger.info(f"Заголовок страницы: {driver.title}")
+
+            data = []
+
+            # Ждём и парсим последние события (окно со статусами)
+            rows = driver.find_elements(By.CSS_SELECTOR, "div.window__trace_content:last-of-type div.window__trace_row")
+            for row in rows:
+                cols = row.find_elements(By.CSS_SELECTOR, "div.trace__row_title.text")
+                if len(cols) == 3:
+                    data.append(
+                        {
+                            "date": cols[0].text.strip(),
+                            "status": cols[1].text.strip(),
+                            "city": cols[2].text.strip(),
+                        }
+                    )
+
+            # Блок с получателем/администратором (предпоследний блок)
+            blocks = driver.find_elements(By.CSS_SELECTOR, "div.window__trace_content")
+            if len(blocks) >= 2:
+                receiver_rows = blocks[-2].find_elements(By.CSS_SELECTOR, "div.window__trace_row")
+                if receiver_rows:
+                    last = receiver_rows[-1].find_elements(By.CSS_SELECTOR, "div.trace__row_title.text")
+                    if len(last) == 3:
+                        data.append({"date": last[0].text.strip(), "receiver_name": last[1].text.strip(), "receiver_role": last[2].text.strip(), "status": "receiver"})
+
+            if not data:
+                logger.warning(f"{self.name}. Нет данных по заказу {orderno}")
                 return None
 
-            # Обрабатываем первую найденную таблицу со статусами заказа
-            status_rows = events_container[-1].find_all("div", class_="window__trace_row")
-
-            for row in status_rows:
-                cells = row.find_all("div", class_="trace__row_title text")
-                if len(cells) == 3:
-                    event = {
-                        "date": cells[0].get_text(strip=True),
-                        "status": cells[1].get_text(strip=True),
-                        "city": cells[2].get_text(strip=True),
-                    }
-                    data.append(event)
-
-            # Теперь ищем блок с получателем/администратором
-            receiver_block = events_container[-2]  # Берём второй с конца
-            receiver_rows = receiver_block.find_all("div", class_="window__trace_row")
-
-            if receiver_rows:
-                last_receiver = receiver_rows[-1].find_all("div", class_="trace__row_title text")
-                if len(last_receiver) == 3:
-                    receiver_info = {
-                        "date": last_receiver[0].get_text(strip=True),
-                        "receiver_name": last_receiver[1].get_text(strip=True),
-                        "receiver_role": last_receiver[2].get_text(strip=True),
-                        "status": "receiver",
-                    }
-                    data.append(receiver_info)
-
-            logger.info(f"{self.name}. Полученные данные для заказа {orderno}: {data}")
+            logger.info(f"{self.name}. Данные по заказу {orderno}: {data}")
             return data
 
-        except Exception as e:
-            logger.error(f"{self.name}. Ошибка при обработке заказа {orderno}: {e}")
+        except TimeoutException as e:
+            logger.error(f"{self.name}. Timeout при заказе {orderno}: {e}")
             return None
+        except Exception as e:
+            logger.error(f"{self.name}. Ошибка при парсинге заказа {orderno}: {e}")
+            return None
+        finally:
+            driver.quit()
 
     def process_delivered_info(self, info):
         result = None
         for event in info:
-            # Проверяем наличие статуса
-            if len(event) > 0 and event["status"] == "Доставлено":
+            if len(event) > 0 and event.get("status") == "Доставлено":
                 receiver_info = info[-1]
-                if receiver_info["receiver_name"]:
+                if receiver_info.get("receiver_name"):
                     result = {
                         "date": event["date"],
                         "receipient": receiver_info["receiver_name"],

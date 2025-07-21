@@ -23,6 +23,8 @@ class Settings:
     URL_SIB_EXPRESS = os.getenv("URL_SIB_EXPRESS", "")
     URL_POST_MASTER = os.getenv("URL_POST_MASTER", "")
     URL_PLEX_POST = os.getenv("URL_PLEX_POST", "")
+    URL_BIZON = os.getenv("URL_BIZON", "")
+    URL_RASTOYANIYA = os.getenv("URL_RASTOYANIYA", "")
 
     URL_SVS_GET = os.getenv("URL_SVS_GET", "")
     URL_SVS_SET = os.getenv("URL_SVS_SET", "")
