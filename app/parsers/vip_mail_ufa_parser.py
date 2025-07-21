@@ -35,12 +35,10 @@ class VIPMailUfaParser(BaseParser):
             # Вводим номер накладной
             number_field = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.NAME, "number")))
             number_field.send_keys(orderno)
-            # logger.info(f"Номер накладной {tracking_number} введен.")
 
             # Нажимаем кнопку "Отправить"
             submit_button = driver.find_element(By.NAME, "submit")
             submit_button.click()
-            # logger.info("Кнопка отправки нажата.")
 
             # Ждем появления таблицы с результатами
             table = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.CLASS_NAME, "show_tracks")))

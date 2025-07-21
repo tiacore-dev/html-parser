@@ -1,6 +1,8 @@
 from loguru import logger
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import create_firefox_driver
@@ -21,9 +23,14 @@ class SPServiceBaseParser(BaseParser):
             logger.info(f"{self.name}. Текущий URL: {driver.current_url}")
             logger.info(f"Заголовок страницы: {driver.title}")
 
-            # Попытка найти таблицу по классу
-            table = driver.find_element(By.CSS_SELECTOR, "table.table-striped")
+            # Ждём появления таблицы до 15 секунд
+            wait = WebDriverWait(driver, 15)
+            table = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "table.table-striped")))
             rows = table.find_elements(By.TAG_NAME, "tr")
+
+            if "не найден" in driver.page_source.lower():
+                logger.warning(f"{self.name}. Заказ {orderno} не найден на странице.")
+                return None
 
             data = {}
             for row in rows:
@@ -38,6 +45,9 @@ class SPServiceBaseParser(BaseParser):
 
         except TimeoutException as e:
             logger.error(f"{self.name}. Таймаут при заказе {orderno}: {e}")
+            return None
+        except NoSuchElementException as e:
+            logger.error(f"{self.name}. Элемент не найден: {e}")
             return None
         except Exception as e:
             logger.error(f"{self.name}. Ошибка при обработке заказа {orderno}: {e}")

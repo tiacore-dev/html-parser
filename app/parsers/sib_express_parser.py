@@ -1,6 +1,8 @@
 from loguru import logger
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import create_firefox_driver
@@ -20,29 +22,30 @@ class SibExpressParser(BaseParser):
 
         try:
             driver.get(self.url)
+            wait = WebDriverWait(driver, 15)
 
-            # Найдём поле ввода и введём номер заказа
-            input_field = driver.find_element(By.NAME, "name")
+            # Ввод номера накладной
+            input_field = wait.until(EC.presence_of_element_located((By.NAME, "name")))
             input_field.clear()
             input_field.send_keys(orderno)
 
-            # Переключаемся на нужную вкладку, если нужно
+            # Выбор вкладки "1"
             tab_radio = driver.find_element(By.CSS_SELECTOR, "input[name='tab'][value='1']")
             tab_radio.click()
 
-            # Нажимаем кнопку "Показать"
+            # Отправка формы
             submit_button = driver.find_element(By.CSS_SELECTOR, "form button[type='submit']")
             submit_button.click()
 
-            # Ожидаем появление таблицы
-            driver.implicitly_wait(5)
+            # Ожидание появления таблицы или сообщения об ошибке
+            wait.until(lambda d: "Не найдено" in d.page_source or d.find_elements(By.TAG_NAME, "table"))
 
-            # Проверяем на "Не найдено"
+            # Проверка на отсутствие данных
             if "Не найдено" in driver.page_source:
                 logger.error(f"{self.name}. Заказ {orderno} не найден.")
                 return None
 
-            # Извлекаем таблицу
+            # Получение таблицы
             table = driver.find_element(By.TAG_NAME, "table")
             rows = table.find_elements(By.TAG_NAME, "tr")
 
@@ -57,8 +60,11 @@ class SibExpressParser(BaseParser):
             logger.info(f"{self.name}. Полученные данные для заказа {orderno}: {data}")
             return data
 
-        except TimeoutException as e:
-            logger.error(f"{self.name}. Timeout при заказе {orderno}: {e}")
+        except TimeoutException:
+            logger.error(f"{self.name}. Timeout при ожидании элементов для заказа {orderno}")
+            return None
+        except NoSuchElementException as e:
+            logger.error(f"{self.name}. Элемент не найден при обработке заказа {orderno}: {e}")
             return None
         except Exception as e:
             logger.error(f"{self.name}. Ошибка при обработке заказа {orderno}: {e}")

@@ -1,6 +1,8 @@
 from loguru import logger
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import create_firefox_driver
@@ -20,14 +22,16 @@ class BizonExpressParser(BaseParser):
             return None
 
         try:
-            # Формируем URL с параметрами
             full_url = f"{self.url}?orderno={orderno}&submit=1&singlebutton=submit"
             driver.get(full_url)
 
             logger.info(f"{self.name}. Текущий URL: {driver.current_url}")
             logger.info(f"Заголовок страницы: {driver.title}")
 
-            table = driver.find_element(By.CSS_SELECTOR, "table.table")
+            wait = WebDriverWait(driver, 15)
+
+            # Явное ожидание появления таблицы
+            table = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "table.table")))
             rows = table.find_elements(By.TAG_NAME, "tr")
 
             data = {"invoice": orderno}
@@ -41,8 +45,11 @@ class BizonExpressParser(BaseParser):
             logger.info(f"{self.name}. Полученные данные для заказа {orderno}: {data}")
             return data
 
-        except TimeoutException as e:
-            logger.error(f"{self.name}. Таймаут при загрузке страницы {orderno}: {e}")
+        except TimeoutException:
+            logger.error(f"{self.name}. Таймаут при ожидании таблицы для заказа {orderno}")
+            return None
+        except NoSuchElementException as e:
+            logger.error(f"{self.name}. Элемент не найден на странице заказа {orderno}: {e}")
             return None
         except Exception as e:
             logger.error(f"{self.name}. Ошибка при обработке заказа {orderno}: {e}")

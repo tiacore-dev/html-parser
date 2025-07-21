@@ -1,6 +1,8 @@
 from loguru import logger
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import create_firefox_driver
@@ -26,10 +28,23 @@ class AvisLogisticsParser(BaseParser):
             logger.info(f"{self.name}. Текущий URL: {driver.current_url}")
             logger.info(f"Заголовок страницы: {driver.title}")
 
+            wait = WebDriverWait(driver, 15)
+
+            # Ждём хотя бы один блок событий
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.window__trace_content")))
+
             data = []
 
-            # Ждём и парсим последние события (окно со статусами)
-            rows = driver.find_elements(By.CSS_SELECTOR, "div.window__trace_content:last-of-type div.window__trace_row")
+            # Все блоки с информацией
+            blocks = driver.find_elements(By.CSS_SELECTOR, "div.window__trace_content")
+
+            if not blocks:
+                logger.warning(f"{self.name}. Нет блоков с информацией по заказу {orderno}")
+                return None
+
+            # Последний блок — статусные события
+            last_block = blocks[-1]
+            rows = last_block.find_elements(By.CSS_SELECTOR, "div.window__trace_row")
             for row in rows:
                 cols = row.find_elements(By.CSS_SELECTOR, "div.trace__row_title.text")
                 if len(cols) == 3:
@@ -41,8 +56,7 @@ class AvisLogisticsParser(BaseParser):
                         }
                     )
 
-            # Блок с получателем/администратором (предпоследний блок)
-            blocks = driver.find_elements(By.CSS_SELECTOR, "div.window__trace_content")
+            # Предпоследний блок — данные получателя
             if len(blocks) >= 2:
                 receiver_rows = blocks[-2].find_elements(By.CSS_SELECTOR, "div.window__trace_row")
                 if receiver_rows:
@@ -57,8 +71,11 @@ class AvisLogisticsParser(BaseParser):
             logger.info(f"{self.name}. Данные по заказу {orderno}: {data}")
             return data
 
-        except TimeoutException as e:
-            logger.error(f"{self.name}. Timeout при заказе {orderno}: {e}")
+        except TimeoutException:
+            logger.error(f"{self.name}. Timeout при заказе {orderno}")
+            return None
+        except NoSuchElementException as e:
+            logger.error(f"{self.name}. Элемент не найден при заказе {orderno}: {e}")
             return None
         except Exception as e:
             logger.error(f"{self.name}. Ошибка при парсинге заказа {orderno}: {e}")
@@ -69,7 +86,7 @@ class AvisLogisticsParser(BaseParser):
     def process_delivered_info(self, info):
         result = None
         for event in info:
-            if len(event) > 0 and event.get("status") == "Доставлено":
+            if event.get("status") == "Доставлено":
                 receiver_info = info[-1]
                 if receiver_info.get("receiver_name"):
                     result = {

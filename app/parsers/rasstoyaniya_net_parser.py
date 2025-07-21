@@ -1,6 +1,8 @@
 from loguru import logger
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 from app.parsers.base_parser import BaseParser
 from app.utils.helpers import create_firefox_driver
@@ -19,27 +21,31 @@ class RasstoyaniyaNetParser(BaseParser):
             return None
 
         try:
-            # Переход на страницу поиска
             driver.get(self.url)
+            wait = WebDriverWait(driver, 15)
 
-            # Ввод номера накладной
-            input_field = driver.find_element(By.NAME, "FindForm[bill]")
+            # Ввод номера
+            input_field = wait.until(EC.presence_of_element_located((By.NAME, "FindForm[bill]")))
             input_field.clear()
             input_field.send_keys(orderno)
 
-            # Отправка формы (обычно кнопка с type="submit")
+            # Клик по кнопке
             submit_button = driver.find_element(By.CSS_SELECTOR, "form button[type='submit']")
             submit_button.click()
 
-            # Ждём загрузки таблицы и заголовка
-            driver.implicitly_wait(5)
+            # Ждём или заголовок, или сообщение об ошибке
+            wait.until(lambda d: "Не найдено" in d.page_source or d.find_elements(By.CSS_SELECTOR, "h5.find-header"))
 
-            # Извлечение заголовка
+            if "не найдено" in driver.page_source.lower():
+                logger.error(f"{self.name}. Заказ {orderno} не найден.")
+                return None
+
+            # Заголовок накладной
             header_elem = driver.find_element(By.CSS_SELECTOR, "h5.find-header")
             invoice = header_elem.text.strip()
 
-            # Извлечение таблицы
-            table = driver.find_element(By.CSS_SELECTOR, "table.detail-view#quick_find")
+            # Таблица с деталями
+            table = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "table.detail-view#quick_find")))
             rows = table.find_elements(By.TAG_NAME, "tr")
 
             data = {"invoice": invoice}
@@ -54,8 +60,11 @@ class RasstoyaniyaNetParser(BaseParser):
             logger.info(f"{self.name}. Полученные данные для заказа {orderno}: {data}")
             return data
 
-        except TimeoutException as e:
-            logger.error(f"{self.name}. Таймаут при заказе {orderno}: {e}")
+        except TimeoutException:
+            logger.error(f"{self.name}. Таймаут при заказе {orderno}")
+            return None
+        except NoSuchElementException as e:
+            logger.error(f"{self.name}. Элемент не найден: {e}")
             return None
         except Exception as e:
             logger.error(f"{self.name}. Ошибка при обработке заказа {orderno}: {e}")
