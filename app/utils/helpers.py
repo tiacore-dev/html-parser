@@ -51,6 +51,7 @@ def create_firefox_driver():
 def retry_on_stale(retries=5, delay=0.5):
     def decorator(func):
         def wrapper(*args, **kwargs):
+            time.sleep(5)
             for attempt in range(1, retries + 1):
                 try:
                     return func(*args, **kwargs)
