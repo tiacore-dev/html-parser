@@ -58,19 +58,19 @@ async def process_orders_for_partner(partner_id, parser: BaseParser):
         await save_log(partner_id, None, "", parser.name, success=False, error_message="Нет заказов")
         return {"partner_id": partner_id, "name": parser.name, "total": 0, "success": 0, "failed": 0}
 
-    with selenium_driver() as driver:
-        for order in orders:
-            total += 1
-            order_id = order.get("id")
-            order_number = order.get("number")
+    for order in orders:
+        total += 1
+        order_id = order.get("id")
+        order_number = order.get("number")
 
-            if not order_number:
-                logger.warning(f"Order number is missing for partner {partner_id}.")
-                await save_log(partner_id, order_id, None, parser.name, success=False, error_message="Отсутствует номер заказа")
-                failed += 1
-                continue
+        if not order_number:
+            logger.warning(f"Order number is missing for partner {partner_id}.")
+            await save_log(partner_id, order_id, None, parser.name, success=False, error_message="Отсутствует номер заказа")
+            failed += 1
+            continue
 
-            try:
+        try:
+            with selenium_driver() as driver:
                 info = parser.parse(order_number, driver)
                 result = parser.process_delivered_info(info) if info else None
 
@@ -90,27 +90,27 @@ async def process_orders_for_partner(partner_id, parser: BaseParser):
                     raw_data=info or [],
                 )
 
-            except Exception as e:
-                handle_error(order_number, e)
-                await save_log(
-                    partner_id,
-                    order_id,
-                    order_number,
-                    parser.name,
-                    success=False,
-                    error_message=str(e),
-                )
-                failed += 1
+        except Exception as e:
+            handle_error(order_number, e)
+            await save_log(
+                partner_id,
+                order_id,
+                order_number,
+                parser.name,
+                success=False,
+                error_message=str(e),
+            )
+            failed += 1
 
-            await asyncio.sleep(15)
+        await asyncio.sleep(15)
 
-        return {
-            "partner_id": partner_id,
-            "name": parser.name,
-            "total": total,
-            "success": success,
-            "failed": failed,
-        }
+    return {
+        "partner_id": partner_id,
+        "name": parser.name,
+        "total": total,
+        "success": success,
+        "failed": failed,
+    }
 
 
 def handle_error(order_number, error):
