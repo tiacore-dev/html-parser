@@ -48,7 +48,7 @@ class ArsexpressParser(BaseParser):
 
                     except StaleElementReferenceException:
                         logger.warning(f"{self.name}. Stale элемент в строке {row_index}, попытка {attempt + 1}")
-                        time.sleep(1)
+                        time.sleep(3)
                     except Exception as e:
                         logger.error(f"{self.name}. Ошибка в строке {row_index}: {e}")
                         break
