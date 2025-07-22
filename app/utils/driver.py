@@ -11,5 +11,9 @@ def selenium_driver():
     try:
         yield driver
     finally:
-        logger.info("Драйвер выключен")
-        driver.quit()
+        logger.info("⏹️ Закрытие драйвера...")
+        try:
+            driver.quit()
+            logger.info("✅ Драйвер успешно завершён")
+        except Exception as e:
+            logger.warning(f"❌ Ошибка при закрытии драйвера: {e}")

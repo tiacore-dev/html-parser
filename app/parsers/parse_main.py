@@ -11,10 +11,9 @@ from app.parsers.base_parser import BaseParser
 from app.parsers.bizon_parser import BizonExpressParser
 from app.parsers.plex_post_parser import PlexPostParser
 from app.parsers.rasstoyaniya_net_parser import RasstoyaniyaNetParser
-
-# from app.parsers.sib_express_parser import SibExpressParser
-# from app.parsers.sp_service_ekaterinburg_parser import SPServiceEkaterinburgParser
-# from app.parsers.sp_service_tyumen_parser import SPServiceTyumenParser
+from app.parsers.sib_express_parser import SibExpressParser
+from app.parsers.sp_service_ekaterinburg_parser import SPServiceEkaterinburgParser
+from app.parsers.sp_service_tyumen_parser import SPServiceTyumenParser
 from app.parsers.svs import get_orders, set_orders
 from app.parsers.vip_mail_ufa_parser import VIPMailUfaParser
 from app.utils.driver import selenium_driver
@@ -34,15 +33,15 @@ async def save_log(partner_id, order_id, order_number, parser_name, success, sta
 
 
 partners = {
-    # "26d49356-559c-11eb-80ef-74d43522d93b": SPServiceTyumenParser(),
-    # "1d4be527-c61e-11e7-9bdb-74d43522d93b": SPServiceEkaterinburgParser(),
-    # "33c8793d-96c2-11e7-b541-00252274a609": SibExpressParser(),
+    "1034e0be-855a-11ea-80dd-74d43522d93b": ArsexpressParser(),
     "b3116f3b-9f4a-11e7-a536-00252274a609": RasstoyaniyaNetParser(),
     "d56a2a0c-6339-11e8-80b5-74d43522d93b": PlexPostParser(),
     "90b470a2-a775-11e7-ad08-74d43522d93b": VIPMailUfaParser(),
     "6208860c-f583-11ef-9de4-a1ec92d2beb8": BizonExpressParser(),
     "076db763-9c54-11e7-aa9c-00252274a609": AvisLogisticsParser(),
-    "1034e0be-855a-11ea-80dd-74d43522d93b": ArsexpressParser(),
+    "26d49356-559c-11eb-80ef-74d43522d93b": SPServiceTyumenParser(),
+    "33c8793d-96c2-11e7-b541-00252274a609": SibExpressParser(),
+    "1d4be527-c61e-11e7-9bdb-74d43522d93b": SPServiceEkaterinburgParser(),
 }
 
 
@@ -58,6 +57,7 @@ async def process_orders_for_partner(partner_id, parser: BaseParser):
         logger.warning(f"Нет заказов для партнёра {parser.name}")
         await save_log(partner_id, None, "", parser.name, success=False, error_message="Нет заказов")
         return {"partner_id": partner_id, "name": parser.name, "total": 0, "success": 0, "failed": 0}
+
     with selenium_driver() as driver:
         for order in orders:
             total += 1

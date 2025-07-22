@@ -14,9 +14,7 @@ services:
       retries: 5
 
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
+    image: gloomylime/svs-parser-web:latest
     restart: always
     container_name: web
     tty: true
@@ -33,9 +31,7 @@ services:
       - parser_network
 
   scheduler:
-    build:
-      context: .
-      dockerfile: Dockerfile.scheduler
+    image: gloomylime/svs-parser-scheduler:${TAG}
     restart: always
     depends_on:
       selenium:
