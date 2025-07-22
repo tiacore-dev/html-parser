@@ -5,7 +5,7 @@ on:
     branches: [master]
 
 jobs:
-  build-test-push:
+  build-push:
     if:  github.ref_name == 'master' 
     runs-on: ubuntu-latest
 
@@ -26,11 +26,11 @@ jobs:
           install: true
 
 
-      - name: Build and Push Docker image web
+      - name: Build and Push Docker image scheduler
         uses: docker/build-push-action@v5
         with:
           context: .
-          dockerfile: Dockerfile.scheduler
+          file: Dockerfile.scheduler
           push: true
           target: prod
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/svs-parser-scheduler:${{ github.sha }}
@@ -125,7 +125,7 @@ jobs:
 
           if [ "$DEPLOY_STATUS" != "success" ]; then
             STATUS="🛑 *Ошибка деплоя*"
-            EXTRA_LINK="\n\n[🔍 Открыть GitHub Actions]($RUN_URL)"
+            EXTRA_LINK="[🔍 Открыть GitHub Actions]($RUN_URL)"
           else
             STATUS="✅ Деплой *успешен*"
             EXTRA_LINK=""
