@@ -5,7 +5,7 @@ import re
 
 from loguru import logger
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
+from selenium.webdriver import FirefoxOptions
 
 
 def clean_html(html):
@@ -16,11 +16,22 @@ def clean_html(html):
     return cleaned_html
 
 
+def dump_debug(driver, name):
+    with open(f"/tmp/{name}.html", "w", encoding="utf-8") as f:
+        f.write(driver.page_source)
+    driver.save_screenshot(f"/tmp/{name}.png")
+
+
 def create_firefox_driver(remote: bool = True):
-    options = Options()
+    options = FirefoxOptions()
     options.add_argument("-headless")
-    options.set_capability("browserName", "firefox")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--width=1920")
+    options.add_argument("--height=1080")
+    options.set_capability("pageLoadStrategy", "eager")
     options.set_capability("acceptInsecureCerts", True)
+    options.set_capability("browserName", "firefox")
 
     if remote:
         logger.info("🚗 Попытка запуска Firefox драйвера (Remote)")
@@ -44,6 +55,7 @@ def create_firefox_driver(remote: bool = True):
     driver.set_page_load_timeout(30)
     driver.implicitly_wait(10)
     driver.set_script_timeout(15)
+    driver.set_window_size(1920, 1080)
 
     logger.info("✅ Драйвер успешно создан и таймауты установлены")
     return driver

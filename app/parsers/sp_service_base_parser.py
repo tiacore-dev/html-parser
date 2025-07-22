@@ -1,10 +1,11 @@
 from loguru import logger
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.parsers.base_parser import BaseParser
+from app.utils.helpers import dump_debug
 
 
 class SPServiceBaseParser(BaseParser):
@@ -16,6 +17,14 @@ class SPServiceBaseParser(BaseParser):
             logger.info(f"Заголовок страницы: {driver.title}")
 
             wait = WebDriverWait(driver, 15)
+
+            try:
+                warning_block = driver.find_element(By.CSS_SELECTOR, "div.alert.alert-info.text-center")
+                if "Ничего не найдено" in warning_block.text:
+                    logger.warning(f"{self.name}. По заказу {orderno} ничего не найдено.")
+                    return []
+            except NoSuchElementException:
+                pass  # Всё норм, продолжаем
             main_table = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div.main-table")))
 
             rows = main_table.find_elements(By.CSS_SELECTOR, "div.row")
@@ -40,8 +49,8 @@ class SPServiceBaseParser(BaseParser):
             logger.error(f"{self.name}. Таймаут при заказе {orderno}: элемент main-table не найден.")
             return None
         except Exception as e:
-            logger.error(f"{self.name}. Ошибка при парсинге заказа {orderno}: {e}")
-            return None
+            logger.error(f"Ошибка при парсинге: {e}")
+            dump_debug(driver, f"debug_{orderno}")
         finally:
             driver.quit()
 
