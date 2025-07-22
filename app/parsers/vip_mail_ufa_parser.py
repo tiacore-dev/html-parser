@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from loguru import logger
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -33,8 +33,19 @@ class VIPMailUfaParser(BaseParser):
             submit_button = driver.find_element(By.NAME, "submit")
             submit_button.click()
 
+            # Проверка, есть ли h3 с номером
+            try:
+                track_title = driver.find_element(By.CSS_SELECTOR, "h3")
+                if "Трек отправления" not in track_title.text:
+                    logger.warning(f"{self.name}. Трек не найден для заказа {orderno}")
+                    return []
+            except NoSuchElementException:
+                logger.warning(f"{self.name}. Трек не найден для заказа {orderno}")
+                return []
+
             # Ждем появления таблицы с результатами
-            table = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.CLASS_NAME, "show_tracks")))
+            table = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.TAG_NAME, "table")))
+
             logger.info(f"{self.name}. Таблица с результатами успешно найдена: {table}.")
 
             # Извлекаем данные из таблицы
@@ -46,7 +57,7 @@ class VIPMailUfaParser(BaseParser):
                     {
                         "Дата": cells[0].text,
                         "Состояние": cells[1].text,
-                        "Примечания": cells[2].text,
+                        "Примечания": cells[2].text if len(cells) > 2 else "",
                     }
                 )
 
