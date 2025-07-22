@@ -33,7 +33,7 @@ def get_orders(customer) -> dict:
         return {"error": "Invalid JSON response"}
 
 
-def set_orders(info, order_id, name):
+def set_orders(info, order_id, name) -> bool:
     """
     Установка статуса заказа.
 
@@ -62,17 +62,13 @@ def set_orders(info, order_id, name):
                 f"""Успешно установлен статус 'Доставлено' 
                 для заказа {order_id} для сервиса {name}."""
             )
+            return True
         else:
             logger.info(
                 f"""Не удалось установить статус 'Доставлено' для 
                 заказа {order_id} для сервиса {name}."""
             )
-    except requests.exceptions.Timeout:
-        logger.error(
-            f"""Превышено время ожидания при установке статуса 
-            для заказа {order_id} для сервиса {name}."""
-        )
-    except requests.exceptions.RequestException as e:
-        logger.error(f"""Ошибка запроса при установке статуса для заказа {order_id}: {e}""")
-    except json.JSONDecodeError as e:
-        logger.error(f"""Ошибка декодирования JSON ответа при установке статуса для заказа {order_id} для сервиса {name}: {e}""")
+            return False
+    except Exception as e:
+        logger.error(f"❌ Ошибка установки статуса для заказа {order_id} ({name}): {e}")
+        return False

@@ -31,8 +31,7 @@ async def send_report_to_telegram(summary: list):
             lines.append(f"❌ *{item['name']}* — ошибка: `{item['error']}`")
             continue
 
-        lines.append(f"🔹 *{item['name']}* ({item['partner_id']})\nВсего: {item['total']} | ✅ Успешно: {item['success']} | ❌ Ошибок: {item['failed']}\n")
+        lines.append(f"🔹 *{item['name']}* ({item['partner_id']})\nВсего: {item['total']} | 📄 Спарсено: {item['parsed']} | ✅ Доставлено: {item['delivered']} | ⏳ Не доставлено: {item['undelivered']} | ❌ Ошибок: {item['failed']}\n")
 
     text = "\n".join(lines)
-
     await send_telegram_message(text, parse_mode="Markdown")

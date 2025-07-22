@@ -50,13 +50,15 @@ async def process_orders_for_partner(partner_id, parser: BaseParser):
     orders = get_orders(partner_id)
 
     total = 0
-    success = 0
+    parsed = 0
+    delivered = 0
+    undelivered = 0
     failed = 0
 
     if not orders:
         logger.warning(f"Нет заказов для партнёра {parser.name}")
         await save_log(partner_id, None, "", parser.name, success=False, error_message="Нет заказов")
-        return {"partner_id": partner_id, "name": parser.name, "total": 0, "success": 0, "failed": 0}
+        return {"partner_id": partner_id, "name": parser.name, "total": 0, "parsed": 0, "delivered": 0, "undelivered": 0, "failed": 0}
 
     for order in orders:
         total += 1
@@ -64,7 +66,7 @@ async def process_orders_for_partner(partner_id, parser: BaseParser):
         order_number = order.get("number")
 
         if not order_number:
-            logger.warning(f"Order number is missing for partner {partner_id}.")
+            logger.warning(f"⚠️ Отсутствует номер заказа для партнёра {partner_id}")
             await save_log(partner_id, order_id, None, parser.name, success=False, error_message="Отсутствует номер заказа")
             failed += 1
             continue
@@ -74,32 +76,37 @@ async def process_orders_for_partner(partner_id, parser: BaseParser):
                 info = parser.parse(order_number, driver)
                 result = parser.process_delivered_info(info) if info else None
 
-                if result:
-                    set_orders(result, order_id, parser.name)
-                    success += 1
-                else:
+                if result is None:
+                    logger.warning(f"⚠️ Пустой результат для заказа {order_number}")
+                    await save_log(partner_id, order_id, order_number, parser.name, success=False, status="Пустой результат", raw_data=info or [])
                     failed += 1
+                    continue
+
+                parsed += 1
+                status = result.get("status", "").lower()
+
+                # Отправка данных
+                if status in {"доставлено", "выдано"}:
+                    if set_orders(result, order_id, parser.name):
+                        delivered += 1
+                    else:
+                        failed += 1  # не удалось установить статус
+                else:
+                    undelivered += 1  # корректный результат, но ещё не доставлено
 
                 await save_log(
                     partner_id,
                     order_id,
                     order_number,
                     parser.name,
-                    success=bool(result),
-                    status=result["status"] if result else "Пустой результат",
+                    success=True,
+                    status=result.get("status", "Нет статуса"),
                     raw_data=info or [],
                 )
 
         except Exception as e:
             handle_error(order_number, e)
-            await save_log(
-                partner_id,
-                order_id,
-                order_number,
-                parser.name,
-                success=False,
-                error_message=str(e),
-            )
+            await save_log(partner_id, order_id, order_number, parser.name, success=False, error_message=str(e))
             failed += 1
 
         await asyncio.sleep(15)
@@ -108,7 +115,9 @@ async def process_orders_for_partner(partner_id, parser: BaseParser):
         "partner_id": partner_id,
         "name": parser.name,
         "total": total,
-        "success": success,
+        "parsed": parsed,
+        "delivered": delivered,
+        "undelivered": undelivered,
         "failed": failed,
     }
 
