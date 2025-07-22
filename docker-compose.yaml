@@ -1,22 +1,24 @@
 services:
 
-  selenium:
-    image: selenium/standalone-firefox:122.0
-    container_name: selenium
-    ports:
-      - "4444:4444"
+  db:
+    image: postgres:15
+    restart: always
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
     networks:
       - parser_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4444/wd/hub/status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   web:
     image: gloomylime/svs-parser-web:latest
     restart: always
     container_name: web
+    depends_on:
+      - db
     tty: true
     stdin_open: true
     env_file:
@@ -34,10 +36,9 @@ services:
     image: gloomylime/svs-parser-scheduler:${TAG}
     restart: always
     depends_on:
-      selenium:
-        condition: service_healthy
+      - db
     environment:
-      - SELENIUM_REMOTE_URL=http://selenium:4444/wd/hub
+      - DISPLAY=:99
     container_name: scheduler
     tty: true
     stdin_open: true
@@ -54,6 +55,10 @@ services:
         target: /tmp
     networks:
       - parser_network
+
+
+volumes:
+  pgdata:
 
 
 networks:
