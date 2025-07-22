@@ -5,6 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.parsers.base_parser import BaseParser
+from app.utils.helpers import safe_click
 
 # Загрузка переменных окружения
 from config import Settings
@@ -18,31 +19,28 @@ class PlexPostParser(BaseParser):
     def parse(self, orderno, driver):
         try:
             driver.get(self.url)
+            wait = WebDriverWait(driver, self.DEFAULT_WAIT_TIME)
 
-            # Ждём появления поля ввода
-            WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.NAME, "codes")))
-
-            # Вводим номер накладной
-            code_field = driver.find_element(By.NAME, "codes")
+            # Ждём поле и вводим номер
+            code_field = wait.until(EC.presence_of_element_located((By.NAME, "codes")))
             code_field.clear()
             code_field.send_keys(orderno)
 
-            # Жмём на кнопку
-            driver.find_element(By.ID, "btn-tracking").click()
+            # Жмем на кнопку (через safe_click)
+            safe_click(driver, '//*[@id="btn-tracking"]', "кнопка Трекинга")
 
             # Ждём появления блока результатов
-            WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.ID, "tracking-results")))
+            wait.until(EC.presence_of_element_located((By.ID, "tracking-results")))
 
-            # Проверяем, появился ли alert с предупреждением
+            # Проверка на предупреждение
             try:
                 warning_elem = driver.find_element(By.CLASS_NAME, "alert-warning")
                 if "По введенным накладным данных нет" in warning_elem.text:
                     logger.warning(f"{self.name}. Для заказа {orderno} нет данных на сайте.")
                     return []
             except NoSuchElementException:
-                pass  # предупреждения нет, продолжаем
+                pass
 
-            # Парсим результат
             result_block = driver.find_element(By.ID, "tracking-results")
             all_text = result_block.text
             lines = all_text.splitlines()
@@ -63,8 +61,6 @@ class PlexPostParser(BaseParser):
         except Exception as e:
             logger.error(f"{self.name}. Ошибка при обработке заказа {orderno}: {e}")
             return None
-        finally:
-            driver.quit()
 
     def process_delivered_info(self, info):
         for event in info:

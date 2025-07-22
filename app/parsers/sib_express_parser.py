@@ -5,12 +5,22 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.parsers.base_parser import BaseParser
+from app.utils.helpers import retry_on_stale, safe_click
 from config import Settings
 
 
 class SibExpressParser(BaseParser):
     name = "Сибирский Экспресс"
     url = Settings.URL_SIB_EXPRESS
+
+    @retry_on_stale(retries=5, delay=1)
+    def _parse_row(self, row):
+        cells = row.find_elements(By.TAG_NAME, "td")
+        if len(cells) == 2:
+            key = cells[0].text.strip()
+            value = cells[1].text.strip()
+            return key, value
+        return None, None
 
     def parse(self, orderno, driver):
         try:
@@ -21,13 +31,10 @@ class SibExpressParser(BaseParser):
             input_field.clear()
             input_field.send_keys(orderno)
 
-            # Удаляем клик по скрытому input[name='tab']
+            # Кликаем по кнопке отправки
+            safe_click(driver, "//form//button[@type='submit']", "кнопка Отправить")
 
-            # Отправка формы
-            submit_button = driver.find_element(By.CSS_SELECTOR, "form button[type='submit']")
-            submit_button.click()
-
-            # Ждём таблицу или сообщение об отсутствии
+            # Ждем либо таблицу, либо сообщение об отсутствии
             wait.until(lambda d: "не найдено" in d.page_source.lower() or d.find_elements(By.TAG_NAME, "table"))
 
             if "не найдено" in driver.page_source.lower():
@@ -41,14 +48,15 @@ class SibExpressParser(BaseParser):
 
             table = tables[0]
             rows = table.find_elements(By.TAG_NAME, "tr")
-
             data = {}
-            for row in rows:
-                cells = row.find_elements(By.TAG_NAME, "td")
-                if len(cells) == 2:
-                    key = cells[0].text.strip()
-                    value = cells[1].text.strip()
-                    data[key] = value
+
+            for row_index, row in enumerate(rows):
+                try:
+                    key, value = self._parse_row(row)
+                    if key:
+                        data[key] = value
+                except Exception as e:
+                    logger.warning(f"{self.name}. Ошибка при обработке строки {row_index}: {e}")
 
             if not data:
                 logger.warning(f"{self.name}. Таблица пуста для заказа {orderno}")
@@ -66,8 +74,6 @@ class SibExpressParser(BaseParser):
         except Exception as e:
             logger.error(f"{self.name}. Ошибка при заказе {orderno}: {e}")
             return None
-        finally:
-            driver.quit()
 
     def process_delivered_info(self, info):
         result = None
