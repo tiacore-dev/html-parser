@@ -32,7 +32,6 @@ jobs:
           context: .
           file: Dockerfile.scheduler
           push: true
-          target: prod
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/svs-parser-scheduler:${{ github.sha }}
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/svs-parser-scheduler:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/svs-parser-scheduler:buildcache,mode=max
