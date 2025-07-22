@@ -7,6 +7,7 @@ from app.database.models import ParsingLog
 from app.handlers.telegram_handler import send_report_to_telegram
 from app.parsers.arsexpress_parser import ArsexpressParser
 from app.parsers.avis_logistics_parser import AvisLogisticsParser
+from app.parsers.base_parser import BaseParser
 from app.parsers.bizon_parser import BizonExpressParser
 from app.parsers.plex_post_parser import PlexPostParser
 from app.parsers.rasstoyaniya_net_parser import RasstoyaniyaNetParser
@@ -16,6 +17,7 @@ from app.parsers.rasstoyaniya_net_parser import RasstoyaniyaNetParser
 # from app.parsers.sp_service_tyumen_parser import SPServiceTyumenParser
 from app.parsers.svs import get_orders, set_orders
 from app.parsers.vip_mail_ufa_parser import VIPMailUfaParser
+from app.utils.helpers import create_firefox_driver
 
 
 async def save_log(partner_id, order_id, order_number, parser_name, success, status=None, error_message=None, raw_data=None):
@@ -44,9 +46,10 @@ partners = {
 }
 
 
-async def process_orders_for_partner(partner_id, parser):
+async def process_orders_for_partner(partner_id, parser: BaseParser):
     logger.info(f"🔍 Обработка заказов для партнёра: {parser.name} ({partner_id})")
     orders = get_orders(partner_id)
+    driver = create_firefox_driver()
 
     total = 0
     success = 0
@@ -69,7 +72,7 @@ async def process_orders_for_partner(partner_id, parser):
             continue
 
         try:
-            info = parser.parse(order_number)
+            info = parser.parse(order_number, driver)
             result = parser.process_delivered_info(info) if info else None
 
             if result:

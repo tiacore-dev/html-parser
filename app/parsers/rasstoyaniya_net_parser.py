@@ -5,7 +5,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.parsers.base_parser import BaseParser
-from app.utils.helpers import create_firefox_driver
 from config import Settings
 
 
@@ -13,13 +12,7 @@ class RasstoyaniyaNetParser(BaseParser):
     name = "Расстояния нет"
     url = Settings.URL_RASTOYANIYA
 
-    def parse(self, orderno):
-        try:
-            driver = create_firefox_driver()
-        except Exception as e:
-            logger.error(f"{self.name}. Ошибка создания драйвера: {e}")
-            return None
-
+    def parse(self, orderno, driver):
         try:
             driver.get(self.url)
             wait = WebDriverWait(driver, 15)

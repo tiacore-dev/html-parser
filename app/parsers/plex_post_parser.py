@@ -1,11 +1,10 @@
 from loguru import logger
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.parsers.base_parser import BaseParser
-from app.utils.helpers import create_firefox_driver
 
 # Загрузка переменных окружения
 from config import Settings
@@ -16,50 +15,54 @@ class PlexPostParser(BaseParser):
     name = "Плекс Пост"
     DEFAULT_WAIT_TIME = 30
 
-    def get_html(self, orderno):
-        """Метод не нужен для PlexPostParser."""
-        raise NotImplementedError(f"Метод 'get_html' не реализован в {self.name}.")
-
-    def parse(self, orderno):
-        driver = create_firefox_driver()
-        driver.get(self.url)
+    def parse(self, orderno, driver):
         try:
-            # 1) Ждем появления поля ввода: id="tn", name="codes"
-            code_field = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.NAME, "codes")))
+            driver.get(self.url)
+
+            # Ждём появления поля ввода
+            WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.NAME, "codes")))
+
+            # Вводим номер накладной
+            code_field = driver.find_element(By.NAME, "codes")
             code_field.clear()
             code_field.send_keys(orderno)
 
-            # 2) Нажимаем на кнопку с id="btn-tracking"
-            submit_button = driver.find_element(By.ID, "btn-tracking")
-            submit_button.click()
+            # Жмём на кнопку
+            driver.find_element(By.ID, "btn-tracking").click()
 
-            # 3) Ждем, пока появится блок с результатом: id="tracking-results"
-            result_block = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.ID, "tracking-results")))
+            # Ждём появления блока результатов
+            WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.ID, "tracking-results")))
 
-            # 4) «Ленивый» вариант: берем весь текст из result_block
+            # Проверяем, появился ли alert с предупреждением
+            try:
+                warning_elem = driver.find_element(By.CLASS_NAME, "alert-warning")
+                if "По введенным накладным данных нет" in warning_elem.text:
+                    logger.warning(f"{self.name}. Для заказа {orderno} нет данных на сайте.")
+                    return []
+            except NoSuchElementException:
+                pass  # предупреждения нет, продолжаем
+
+            # Парсим результат
+            result_block = driver.find_element(By.ID, "tracking-results")
             all_text = result_block.text
-            # Пример строки: "09.01.2025 07:42 - Поступило на склад Самара"
-            # Разделяем по переносам
             lines = all_text.splitlines()
 
             results = []
             for line in lines:
-                # Ожидаем формат: "дата - статус"
-                parts = line.split(" - ", 1)  # делим один раз
+                parts = line.split(" - ", 1)
                 if len(parts) == 2:
-                    date_part = parts[0].strip()
-                    status_part = parts[1].strip()
+                    date_part, status_part = parts[0].strip(), parts[1].strip()
                     results.append({"Дата": date_part, "Статус": status_part})
 
             logger.info(f"{self.name}. Данные отслеживания: {results}")
             return results
+
         except TimeoutException as e:
-            logger.error(f"""{self.name}. Элемент не найден для заказа {orderno}: {e}""")
+            logger.error(f"{self.name}. Таймаут при обработке заказа {orderno}: {e}")
             return None
         except Exception as e:
-            logger.error(f"""{self.name}. Ошибка при обработке заказа {orderno}: {e}""")
+            logger.error(f"{self.name}. Ошибка при обработке заказа {orderno}: {e}")
             return None
-
         finally:
             driver.quit()
 

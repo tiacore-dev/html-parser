@@ -8,7 +8,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.parsers.base_parser import BaseParser
-from app.utils.helpers import create_firefox_driver
 
 load_dotenv()
 
@@ -18,13 +17,7 @@ class VIPMailUfaParser(BaseParser):
     name = "ВипМайл Уфа"
     DEFAULT_WAIT_TIME = 30
 
-    def parse(self, orderno):
-        try:
-            driver = create_firefox_driver()
-        except Exception as e:
-            logger.error(f"Ошибка создания драйвера: {e}")
-            return None
-
+    def parse(self, orderno, driver):
         try:
             driver.get(self.url)
         except Exception as e:

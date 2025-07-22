@@ -3,7 +3,6 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 
 from app.parsers.base_parser import BaseParser
-from app.utils.helpers import create_firefox_driver
 from config import Settings
 
 # Загрузка переменных окружения
@@ -14,17 +13,7 @@ class ArsexpressParser(BaseParser):
     name = "Арсэкспресс"
     DEFAULT_WAIT_TIME = 30
 
-    def get_html(self, orderno):
-        """Метод не нужен для PlexPostParser."""
-        raise NotImplementedError(f"Метод 'get_html' не реализован в {self.name}.")
-
-    def parse(self, orderno):
-        try:
-            driver = create_firefox_driver()
-        except Exception as e:
-            logger.error(f"Ошибка создания драйвера: {e}")
-            return None
-
+    def parse(self, orderno, driver):
         try:
             driver.get(f"{self.url}{orderno}")
         except Exception as e:
