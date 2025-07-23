@@ -5,7 +5,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from app.parsers.base_parser import BaseParser
-from app.utils.helpers import retry_on_stale, safe_click
+from app.utils.helpers import retry_on_stale
 from config import Settings
 
 
@@ -20,6 +20,13 @@ class SibExpressParser(BaseParser):
             key = cells[0].text.strip()
             value = cells[1].text.strip()
             return key, value
+        elif len(cells) == 1:
+            text = cells[0].text.strip()
+            # Попробуем сплитнуть по первой цифре
+            if " " in text:
+                split_idx = text.find(" ")
+                return text[:split_idx], text[split_idx + 1 :].strip()
+            return None, text
         return None, None
 
     def parse(self, orderno, driver):
@@ -27,39 +34,38 @@ class SibExpressParser(BaseParser):
             driver.get(self.url)
             wait = WebDriverWait(driver, 15)
 
+            # Ввод накладной
             input_field = wait.until(EC.presence_of_element_located((By.NAME, "name")))
             input_field.clear()
             input_field.send_keys(orderno)
 
-            # Кликаем по кнопке отправки
-            safe_click(driver, "//form//button[@type='submit']", "кнопка Отправить")
+            # Сабмит формы
+            form = driver.find_element(By.CSS_SELECTOR, "form.order-form")
+            form.submit()
+            logger.info(f"{self.name}. Форма отправлена через submit()")
 
-            # Ждем либо таблицу, либо сообщение об отсутствии
-            wait.until(lambda d: "не найдено" in d.page_source.lower() or d.find_elements(By.TAG_NAME, "table"))
+            # Ждём появление блока с результатом
+            wait.until(EC.presence_of_element_located((By.CLASS_NAME, "msg")))
 
-            if "не найдено" in driver.page_source.lower():
-                logger.warning(f"{self.name}. Заказ {orderno} не найден.")
-                return None
-
-            tables = driver.find_elements(By.TAG_NAME, "table")
-            if not tables:
-                logger.warning(f"{self.name}. Таблица не найдена для заказа {orderno}.")
-                return None
-
-            table = tables[0]
+            msg_block = driver.find_element(By.CLASS_NAME, "msg")
+            table = msg_block.find_element(By.TAG_NAME, "table")
             rows = table.find_elements(By.TAG_NAME, "tr")
             data = {}
 
-            for row_index, row in enumerate(rows):
+            for i, row in enumerate(rows):
                 try:
-                    key, value = self._parse_row(row)
-                    if key:
-                        data[key] = value
+                    cells = row.find_elements(By.TAG_NAME, "td")
+                    if len(cells) == 2:
+                        key = cells[0].text.strip()
+                        value = cells[1].text.strip()
+                        if key:
+                            data[key] = value
                 except Exception as e:
-                    logger.warning(f"{self.name}. Ошибка при обработке строки {row_index}: {e}")
+                    logger.warning(f"{self.name}. Ошибка при разборе строки {i}: {e}")
 
             if not data:
                 logger.warning(f"{self.name}. Таблица пуста для заказа {orderno}")
+                # dump_debug(driver, f"sib_express_{orderno}_empty")
                 return None
 
             logger.info(f"{self.name}. Полученные данные для заказа {orderno}: {data}")
@@ -67,12 +73,15 @@ class SibExpressParser(BaseParser):
 
         except TimeoutException:
             logger.error(f"{self.name}. Timeout при ожидании элементов для заказа {orderno}")
+            # dump_debug(driver, f"sib_express_{orderno}_timeout")
             return None
         except NoSuchElementException as e:
             logger.error(f"{self.name}. Элемент не найден при заказе {orderno}: {e}")
+            # dump_debug(driver, f"sib_express_{orderno}_no_element")
             return None
         except Exception as e:
             logger.error(f"{self.name}. Ошибка при заказе {orderno}: {e}")
+            # dump_debug(driver, f"sib_express_{orderno}_exception")
             return None
 
     def process_delivered_info(self, info):

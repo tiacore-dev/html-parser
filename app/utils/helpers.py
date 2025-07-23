@@ -2,6 +2,7 @@
 
 import os
 import re
+import tempfile
 import time
 
 from loguru import logger
@@ -26,9 +27,19 @@ def clean_html(html):
 
 
 def dump_debug(driver, name):
-    with open(f"/tmp/{name}.html", "w", encoding="utf-8") as f:
+    debug_dir = os.path.join(tempfile.gettempdir(), "selenium_debug")
+    os.makedirs(debug_dir, exist_ok=True)
+
+    html_path = os.path.join(debug_dir, f"{name}.html")
+    screenshot_path = os.path.join(debug_dir, f"{name}.png")
+
+    with open(html_path, "w", encoding="utf-8") as f:
         f.write(driver.page_source)
-    driver.save_screenshot(f"/tmp/{name}.png")
+
+    driver.save_screenshot(screenshot_path)
+
+    print(f"[DEBUG] Saved HTML to: {html_path}")
+    print(f"[DEBUG] Saved screenshot to: {screenshot_path}")
 
 
 def create_firefox_driver():
