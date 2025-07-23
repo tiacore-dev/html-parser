@@ -74,25 +74,26 @@ async def process_orders_for_partner(partner_id, parser: BaseParser):
         try:
             with selenium_driver() as driver:
                 info = parser.parse(order_number, driver)
+                if info is None:
+                    # Парсинг не удался (ошибка, элемент не найден и т.п.)
+                    logger.warning(f"❌ Ошибка парсинга для заказа {order_number}")
+                    await save_log(partner_id, order_id, order_number, parser.name, success=False, status="Ошибка парсинга", raw_data={})
+                    failed += 1
+                    continue
+                parsed += 1
                 result = parser.process_delivered_info(info) if info else None
 
                 if result is None:
                     logger.warning(f"⚠️ Пустой результат для заказа {order_number}")
-                    await save_log(partner_id, order_id, order_number, parser.name, success=False, status="Пустой результат", raw_data=info or [])
-                    failed += 1
+                    undelivered += 1
+                    await save_log(partner_id, order_id, order_number, parser.name, success=True, status="Не доставлено", raw_data=info)
                     continue
 
-                parsed += 1
-                status = result.get("status", "").lower()
-
-                # Отправка данных
-                if status in {"доставлено", "выдано"}:
-                    if set_orders(result, order_id, parser.name):
-                        delivered += 1
-                    else:
-                        failed += 1  # не удалось установить статус
+                if set_orders(result, order_id, parser.name):
+                    delivered += 1
                 else:
-                    undelivered += 1  # корректный результат, но ещё не доставлено
+                    logger.warning(f"⚠️ Не удалось установить статус у {order_number}")
+                    failed += 1
 
                 await save_log(
                     partner_id,
