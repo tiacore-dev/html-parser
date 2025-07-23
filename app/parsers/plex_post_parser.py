@@ -37,7 +37,7 @@ class PlexPostParser(BaseParser):
                 warning_elem = driver.find_element(By.CLASS_NAME, "alert-warning")
                 if "По введенным накладным данных нет" in warning_elem.text:
                     logger.warning(f"{self.name}. Для заказа {orderno} нет данных на сайте.")
-                    return []
+                    return {}
             except NoSuchElementException:
                 pass
 
