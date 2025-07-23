@@ -32,7 +32,7 @@ class SPServiceBaseParser(BaseParser):
                 warning_block = driver.find_element(By.CSS_SELECTOR, "div.alert.alert-info.text-center")
                 if "Ничего не найдено" in warning_block.text:
                     logger.warning(f"{self.name}. По заказу {orderno} ничего не найдено.")
-                    return []
+                    return {}
             except NoSuchElementException:
                 pass
 
