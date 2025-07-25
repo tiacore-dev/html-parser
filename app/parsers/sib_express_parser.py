@@ -1,5 +1,5 @@
 from loguru import logger
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -48,40 +48,39 @@ class SibExpressParser(BaseParser):
             wait.until(EC.presence_of_element_located((By.CLASS_NAME, "msg")))
 
             msg_block = driver.find_element(By.CLASS_NAME, "msg")
-            table = msg_block.find_element(By.TAG_NAME, "table")
-            rows = table.find_elements(By.TAG_NAME, "tr")
-            data = {}
 
-            for i, row in enumerate(rows):
-                try:
-                    cells = row.find_elements(By.TAG_NAME, "td")
-                    if len(cells) == 2:
-                        key = cells[0].text.strip()
-                        value = cells[1].text.strip()
-                        if key:
-                            data[key] = value
-                except Exception as e:
-                    logger.warning(f"{self.name}. Ошибка при разборе строки {i}: {e}")
+            # Проверяем, есть ли таблица внутри блока
+            try:
+                table = msg_block.find_element(By.TAG_NAME, "table")
+                rows = table.find_elements(By.TAG_NAME, "tr")
+                data = {}
 
-            if not data:
-                logger.warning(f"{self.name}. Таблица пуста для заказа {orderno}")
-                # dump_debug(driver, f"sib_express_{orderno}_empty")
-                return None
+                for i, row in enumerate(rows):
+                    try:
+                        cells = row.find_elements(By.TAG_NAME, "td")
+                        if len(cells) == 2:
+                            key = cells[0].text.strip()
+                            value = cells[1].text.strip()
+                            if key:
+                                data[key] = value
+                    except Exception as e:
+                        logger.warning(f"{self.name}. Ошибка при разборе строки {i}: {e}")
 
-            logger.info(f"{self.name}. Полученные данные для заказа {orderno}: {data}")
-            return data
+                if not data:
+                    logger.warning(f"{self.name}. Таблица пуста для заказа {orderno}")
+                    return None
 
-        except TimeoutException:
-            logger.error(f"{self.name}. Timeout при ожидании элементов для заказа {orderno}")
-            # dump_debug(driver, f"sib_express_{orderno}_timeout")
-            return None
-        except NoSuchElementException as e:
-            logger.error(f"{self.name}. Элемент не найден при заказе {orderno}: {e}")
-            # dump_debug(driver, f"sib_express_{orderno}_no_element")
-            return None
+                logger.info(f"{self.name}. Полученные данные для заказа {orderno}: {data}")
+                return data
+
+            except NoSuchElementException:
+                # Если таблицы нет — значит просто ничего не найдено
+                logger.info(f"{self.name}. Заказ {orderno} не найден")
+                return {}
+
         except Exception as e:
             logger.error(f"{self.name}. Ошибка при заказе {orderno}: {e}")
-            # dump_debug(driver, f"sib_express_{orderno}_exception")
+
             return None
 
     def process_delivered_info(self, info):
