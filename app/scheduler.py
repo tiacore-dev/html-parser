@@ -12,7 +12,8 @@ async def start_scheduler():
     scheduler.add_job(
         parser_main,
         trigger="cron",
-        minute="0,30",
+        hour="*/3",
+        minute=0,
         id="parse_job",
         replace_existing=True,
     )
