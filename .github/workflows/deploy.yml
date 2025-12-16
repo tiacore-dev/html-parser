@@ -55,7 +55,7 @@ jobs:
         run: |
           case "${{ github.ref_name }}" in
             master)
-              echo "DEPLOY_PATH=apps/html-parser" >> $GITHUB_ENV
+              echo "DEPLOY_PATH=html-parser" >> $GITHUB_ENV
               ;;
             *)
               echo "❌ Неизвестная ветка! Прерываем процесс."
@@ -93,7 +93,7 @@ jobs:
       - name: 🚀 Start Backend
         run: |
           echo "🚀 Перезапускаем backend..."
-          ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << EOF
+          ssh -p 1056 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << EOF
             cd $DEPLOY_PATH || exit 1
 
             docker compose -f docker-compose.yaml up scheduler -d --force-recreate && \
@@ -131,6 +131,7 @@ jobs:
           fi
 
           CHAT_ID="${{ secrets.TELEGRAM_CHAT_ID }}"
+          THREAD_ID="${{  secrets.TELEGRAM_THREAD_ID  }}"
 
           ESCAPED_COMMIT_MESSAGE=$(echo "$COMMIT_MESSAGE" | sed -E 's/([*_`\[\]()])/\\\1/g')
           TEXT="${STATUS}
@@ -142,6 +143,7 @@ jobs:
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d chat_id="$CHAT_ID" \
+            -d message_thread_id=$THREAD_ID \
             -d parse_mode=Markdown \
             -d "text=$TEXT" || exit 1
 
