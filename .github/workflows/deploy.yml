@@ -68,7 +68,7 @@ jobs:
       - name: 🛠 Deploy Backend
         run: |
           echo "🚀 Деплой..."
-          ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << EOF
+          ssh -p 1056 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << EOF
             export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             export DOCKERHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }}
             export DEPLOY_TAG=${{ github.sha }}
