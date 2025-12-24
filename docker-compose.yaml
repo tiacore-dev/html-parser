@@ -2,7 +2,7 @@ services:
 
   db:
     image: postgres:15
-    restart: until-stopped
+    restart: unless-stopped
     container_name: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -17,7 +17,7 @@ services:
 
   web:
     image: gloomylime/svs-parser-web:latest
-    restart: until-stopped
+    restart: unless-stopped
     container_name: web
     depends_on:
       - db
@@ -36,7 +36,7 @@ services:
 
   scheduler:
     image: gloomylime/svs-parser-scheduler:${TAG}
-    restart: until-stopped
+    restart: unless-stopped
     depends_on:
       - db
     environment:
