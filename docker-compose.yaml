@@ -16,7 +16,7 @@ services:
       - parser_network
 
   web:
-    image: gloomylime/svs-parser-web:latest
+    image: gloomylime/svs-parser-web:${TAG}
     restart: unless-stopped
     container_name: web
     depends_on:

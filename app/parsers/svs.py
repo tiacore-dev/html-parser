@@ -3,6 +3,7 @@ import json
 import requests
 from loguru import logger
 
+from app.handlers.telegram_handler import send_set_status_error_to_telegram
 from config import Settings
 
 
@@ -33,7 +34,7 @@ def get_orders(customer) -> dict:
         return {"error": "Invalid JSON response"}
 
 
-def set_orders(info, order_id, name) -> bool:
+async def set_orders(info, order_id, order_number, partner_id, name) -> bool:
     """
     Установка статуса заказа.
 
@@ -68,7 +69,22 @@ def set_orders(info, order_id, name) -> bool:
                 f"""Не удалось установить статус 'Доставлено' для 
                 заказа {order_id} для сервиса {name}."""
             )
+            await send_set_status_error_to_telegram(
+                partner_id=partner_id,
+                parser_name=name,
+                order_number=order_number,
+                order_id=order_id,
+                response_text=response.text,
+            )
             return False
     except Exception as e:
         logger.error(f"❌ Ошибка установки статуса для заказа {order_id} ({name}): {e}")
+        response_text = getattr(getattr(e, "response", None), "text", str(e))
+        await send_set_status_error_to_telegram(
+            partner_id=partner_id,
+            parser_name=name,
+            order_number=order_number,
+            order_id=order_id,
+            response_text=response_text,
+        )
         return False

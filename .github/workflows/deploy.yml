@@ -36,6 +36,16 @@ jobs:
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/svs-parser-scheduler:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/svs-parser-scheduler:buildcache,mode=max
 
+      - name: Build and Push Docker image web
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.backend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/svs-parser-web:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/svs-parser-web:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/svs-parser-web:buildcache,mode=max
+
 
 
   deploy:
@@ -82,7 +92,10 @@ jobs:
               || { echo "❌ Docker login failed"; exit 1; }
 
             docker pull \$DOCKERHUB_USERNAME/svs-parser-scheduler:\$DEPLOY_TAG \
-              || { echo "❌ Docker pull failed"; exit 1; }
+              || { echo "❌ Scheduler Docker pull failed"; exit 1; }
+
+            docker pull \$DOCKERHUB_USERNAME/svs-parser-web:\$DEPLOY_TAG \
+              || { echo "❌ Web Docker pull failed"; exit 1; }
 
             if [ ! -f .env ]; then touch .env; fi
             grep -q "^TAG=" .env && sed -i "s/^TAG=.*/TAG=\$DEPLOY_TAG/" .env || echo "TAG=\$DEPLOY_TAG" >> .env
@@ -96,9 +109,9 @@ jobs:
           ssh -p 1056 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << EOF
             cd $DEPLOY_PATH || exit 1
 
-            docker compose -f docker-compose.yaml up scheduler -d --force-recreate && \
-            echo "✅ Контейнер перезапущен" || {
-              echo "❌ Контейнер не запустился"
+            docker compose -f docker-compose.yaml up web scheduler -d --force-recreate && \
+            echo "✅ Контейнеры перезапущены" || {
+              echo "❌ Контейнеры не запустились"
               exit 1
             }
 
@@ -146,4 +159,3 @@ jobs:
             -d message_thread_id=$THREAD_ID \
             -d parse_mode=Markdown \
             -d "text=$TEXT" || exit 1
-

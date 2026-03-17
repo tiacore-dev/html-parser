@@ -6,10 +6,10 @@ from app.handlers.auth_handler import check_api_key
 from app.pydantic_models.result_models import ParsingLogFilterSchema, ParsingLogListResponseSchema, ParsingLogSchema
 
 # Создаем роутеры
-parse_router = APIRouter()
+log_router = APIRouter()
 
 
-@parse_router.get("/logs", response_model=ParsingLogListResponseSchema)
+@log_router.get("/logs", response_model=ParsingLogListResponseSchema)
 async def get_logs(filters: ParsingLogFilterSchema = Depends(), _=Depends(check_api_key)):
     query = Q()
 
@@ -31,4 +31,12 @@ async def get_logs(filters: ParsingLogFilterSchema = Depends(), _=Depends(check_
     total = await ParsingLog.filter(query).count()
     logs = await ParsingLog.filter(query).order_by("-parsed_at").limit(100)
 
-    return ParsingLogListResponseSchema(total=total, logs=[ParsingLogSchema.model_validate({**log.__dict__, "raw_data": log.raw_data if isinstance(log.raw_data, dict) else None}) for log in logs])
+    return ParsingLogListResponseSchema(
+        total=total,
+        logs=[
+            ParsingLogSchema.model_validate(
+                {**log.__dict__, "raw_data": log.raw_data if isinstance(log.raw_data, dict) else None}
+            )
+            for log in logs
+        ],
+    )

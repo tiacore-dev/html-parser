@@ -1,19 +1,60 @@
-FROM python:3.12-slim
+FROM python:3.12-slim AS base
 
 WORKDIR /app
 
-# Установка системных зависимостей, если нужны (например, для psycopg2 или других)
+ENV TZ=Asia/Novosibirsk \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DISPLAY=:99
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    firefox-esr \
+    wget \
+    curl \
+    unzip \
+    xvfb \
     gcc \
     libpq-dev \
+    iputils-ping \
+    libgtk-3-0 \
+    libdbus-glib-1-2 \
+    libnss3 \
+    libasound2 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libxss1 \
+    libxtst6 \
+    libxi6 \
+    fonts-liberation \
     && apt-get clean \
-    && apt-get install -y iputils-ping \
     && rm -rf /var/lib/apt/lists/*
 
-# Установка зависимостей
-COPY requirements.backend.txt .
-RUN pip install --no-cache-dir -r requirements.backend.txt
+RUN GECKO_VERSION="v0.36.0" && \
+    wget -q "https://github.com/mozilla/geckodriver/releases/download/$GECKO_VERSION/geckodriver-$GECKO_VERSION-linux64.tar.gz" && \
+    tar -xzf "geckodriver-$GECKO_VERSION-linux64.tar.gz" && \
+    rm "geckodriver-$GECKO_VERSION-linux64.tar.gz" && \
+    mv geckodriver /usr/local/bin/ && chmod +x /usr/local/bin/geckodriver
 
-# Копируем исходники
+COPY requirements.backend.txt requirements.scheduler.txt ./
+RUN pip install --no-cache-dir -r requirements.backend.txt -r requirements.scheduler.txt
+
 COPY . .
 
+RUN cp /app/docker/web-entrypoint.sh /usr/local/bin/web-entrypoint.sh \
+    && chmod +x /usr/local/bin/web-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/web-entrypoint.sh"]
+CMD ["gunicorn", "-c", "gunicorn.conf.py", "run:app"]
+
+
+FROM base AS dev
+
+ENV WATCHFILES_FORCE_POLLING=1
+
+RUN pip install --no-cache-dir watchdog
+
+CMD ["watchmedo", "auto-restart", "-d", "app", "-d", ".", "-p", "*.py", "-R", "--", "uvicorn", "run:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

@@ -19,7 +19,9 @@ from app.parsers.vip_mail_ufa_parser import VIPMailUfaParser
 from app.utils.driver import selenium_driver
 
 
-async def save_log(partner_id, order_id, order_number, parser_name, success, status=None, error_message=None, raw_data=None):
+async def save_log(
+    partner_id, order_id, order_number, parser_name, success, status=None, error_message=None, raw_data=None
+):
     await ParsingLog.create(
         partner_id=partner_id,
         order_id=order_id,
@@ -32,22 +34,67 @@ async def save_log(partner_id, order_id, order_number, parser_name, success, sta
     )
 
 
-partners = {
-    "90b470a2-a775-11e7-ad08-74d43522d93b": VIPMailUfaParser(),
-    "1034e0be-855a-11ea-80dd-74d43522d93b": ArsexpressParser(),
-    "b3116f3b-9f4a-11e7-a536-00252274a609": RasstoyaniyaNetParser(),
-    "d56a2a0c-6339-11e8-80b5-74d43522d93b": PlexPostParser(),
-    "6208860c-f583-11ef-9de4-a1ec92d2beb8": BizonExpressParser(),
-    "076db763-9c54-11e7-aa9c-00252274a609": AvisLogisticsParser(),
-    "26d49356-559c-11eb-80ef-74d43522d93b": SPServiceTyumenParser(),
-    "33c8793d-96c2-11e7-b541-00252274a609": SibExpressParser(),
-    "1d4be527-c61e-11e7-9bdb-74d43522d93b": SPServiceEkaterinburgParser(),
+PARSER_REGISTRY = {
+    "vip_mail_ufa": {"partner_id": "90b470a2-a775-11e7-ad08-74d43522d93b", "parser": VIPMailUfaParser()},
+    "arsexpress": {"partner_id": "1034e0be-855a-11ea-80dd-74d43522d93b", "parser": ArsexpressParser()},
+    "rasstoyaniya_net": {"partner_id": "b3116f3b-9f4a-11e7-a536-00252274a609", "parser": RasstoyaniyaNetParser()},
+    "plex_post": {"partner_id": "d56a2a0c-6339-11e8-80b5-74d43522d93b", "parser": PlexPostParser()},
+    "bizon_express": {"partner_id": "6208860c-f583-11ef-9de4-a1ec92d2beb8", "parser": BizonExpressParser()},
+    "avis_logistics": {"partner_id": "076db763-9c54-11e7-aa9c-00252274a609", "parser": AvisLogisticsParser()},
+    "sp_service_tyumen": {"partner_id": "26d49356-559c-11eb-80ef-74d43522d93b", "parser": SPServiceTyumenParser()},
+    "sib_express": {"partner_id": "33c8793d-96c2-11e7-b541-00252274a609", "parser": SibExpressParser()},
+    "sp_service_ekaterinburg": {
+        "partner_id": "1d4be527-c61e-11e7-9bdb-74d43522d93b",
+        "parser": SPServiceEkaterinburgParser(),
+    },
 }
 
+partners = {item["partner_id"]: item["parser"] for item in PARSER_REGISTRY.values()}
 
-async def process_orders_for_partner(partner_id, parser: BaseParser):
+
+def get_parser_debug_list():
+    return [
+        {"parser_key": parser_key, "partner_id": parser_info["partner_id"], "parser_name": parser_info["parser"].name}
+        for parser_key, parser_info in PARSER_REGISTRY.items()
+    ]
+
+
+def get_parser_for_debug(parser_key: str):
+    return PARSER_REGISTRY.get(parser_key)
+
+
+def get_parser_orders_for_debug(parser_key: str):
+    parser_info = get_parser_for_debug(parser_key)
+    if parser_info is None:
+        return None
+
+    orders = get_orders(parser_info["partner_id"])
+    return {
+        "parser_key": parser_key,
+        "partner_id": parser_info["partner_id"],
+        "parser_name": parser_info["parser"].name,
+        "orders": orders,
+    }
+
+
+async def process_orders_for_partner(partner_id, parser: BaseParser, orders=None):
     logger.info(f"🔍 Обработка заказов для партнёра: {parser.name} ({partner_id})")
-    orders = get_orders(partner_id)
+    if orders is None:
+        orders = get_orders(partner_id)
+
+    if isinstance(orders, dict) and orders.get("error"):
+        logger.warning(f"Не удалось получить заказы для партнёра {parser.name}: {orders['error']}")
+        await save_log(partner_id, None, "", parser.name, success=False, error_message=orders["error"])
+        return {
+            "partner_id": partner_id,
+            "name": parser.name,
+            "total": 0,
+            "parsed": 0,
+            "delivered": 0,
+            "undelivered": 0,
+            "failed": 0,
+            "error": orders["error"],
+        }
 
     total = 0
     parsed = 0
@@ -58,7 +105,15 @@ async def process_orders_for_partner(partner_id, parser: BaseParser):
     if not orders:
         logger.warning(f"Нет заказов для партнёра {parser.name}")
         await save_log(partner_id, None, "", parser.name, success=False, error_message="Нет заказов")
-        return {"partner_id": partner_id, "name": parser.name, "total": 0, "parsed": 0, "delivered": 0, "undelivered": 0, "failed": 0}
+        return {
+            "partner_id": partner_id,
+            "name": parser.name,
+            "total": 0,
+            "parsed": 0,
+            "delivered": 0,
+            "undelivered": 0,
+            "failed": 0,
+        }
 
     for order in orders:
         total += 1
@@ -67,7 +122,9 @@ async def process_orders_for_partner(partner_id, parser: BaseParser):
 
         if not order_number:
             logger.warning(f"⚠️ Отсутствует номер заказа для партнёра {partner_id}")
-            await save_log(partner_id, order_id, None, parser.name, success=False, error_message="Отсутствует номер заказа")
+            await save_log(
+                partner_id, order_id, None, parser.name, success=False, error_message="Отсутствует номер заказа"
+            )
             failed += 1
             continue
 
@@ -77,13 +134,23 @@ async def process_orders_for_partner(partner_id, parser: BaseParser):
 
                 if info is None:
                     logger.warning(f"❌ Ошибка парсинга для заказа {order_number}")
-                    await save_log(partner_id, order_id, order_number, parser.name, success=False, status="Ошибка парсинга", raw_data={})
+                    await save_log(
+                        partner_id,
+                        order_id,
+                        order_number,
+                        parser.name,
+                        success=False,
+                        status="Ошибка парсинга",
+                        raw_data={},
+                    )
                     failed += 1
                     continue
 
                 if not info:  # ловит {} и None
                     logger.info(f"🔍 Заказ {order_number} не найден")
-                    await save_log(partner_id, order_id, order_number, parser.name, success=True, status="Не найден", raw_data={})
+                    await save_log(
+                        partner_id, order_id, order_number, parser.name, success=True, status="Не найден", raw_data={}
+                    )
                     undelivered += 1
                     continue
 
@@ -93,10 +160,18 @@ async def process_orders_for_partner(partner_id, parser: BaseParser):
                 if result is None:
                     logger.warning(f"⚠️ Пустой результат для заказа {order_number}")
                     undelivered += 1
-                    await save_log(partner_id, order_id, order_number, parser.name, success=True, status="Не доставлено", raw_data=info)
+                    await save_log(
+                        partner_id,
+                        order_id,
+                        order_number,
+                        parser.name,
+                        success=True,
+                        status="Не доставлено",
+                        raw_data=info,
+                    )
                     continue
 
-                if set_orders(result, order_id, parser.name):
+                if await set_orders(result, order_id, order_number, partner_id, parser.name):
                     delivered += 1
                 else:
                     logger.warning(f"⚠️ Не удалось установить статус у {order_number}")
@@ -135,6 +210,28 @@ def handle_error(order_number, error):
         logger.error(f"Connection error for order {order_number}: {error}")
     else:
         logger.error(f"Error processing order {order_number}: {error}")
+
+
+async def run_parser_for_debug(parser_key: str):
+    parser_info = get_parser_for_debug(parser_key)
+    if parser_info is None:
+        return None
+
+    orders = get_orders(parser_info["partner_id"])
+    if isinstance(orders, dict) and orders.get("error"):
+        return {
+            "parser_key": parser_key,
+            "partner_id": parser_info["partner_id"],
+            "parser_name": parser_info["parser"].name,
+            "summary": await process_orders_for_partner(parser_info["partner_id"], parser_info["parser"], orders=orders),
+        }
+
+    return {
+        "parser_key": parser_key,
+        "partner_id": parser_info["partner_id"],
+        "parser_name": parser_info["parser"].name,
+        "summary": await process_orders_for_partner(parser_info["partner_id"], parser_info["parser"], orders=orders),
+    }
 
 
 async def parser_main():

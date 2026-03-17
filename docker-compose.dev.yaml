@@ -1,0 +1,28 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: dev
+    restart: unless-stopped
+    container_name: parser-web-dev
+    tty: true
+    stdin_open: true
+    env_file:
+      - .env
+    ports:
+      - "${PORT}:8000"
+    environment:
+      DISPLAY: :99
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+    volumes:
+      - .:/app
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - local_network
+
+networks:
+  local_network:
+    external: true
