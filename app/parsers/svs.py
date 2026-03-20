@@ -1,10 +1,34 @@
 import json
+from datetime import datetime
 
 import requests
 from loguru import logger
 
 from app.handlers.telegram_handler import send_set_status_error_to_telegram
 from config import Settings
+
+
+def normalize_delivery_date(date_str: str) -> str:
+    if not date_str:
+        return date_str
+
+    known_formats = (
+        ("%Y-%m-%d %H:%M:%S", "%d.%m.%Y %H:%M:%S"),
+        ("%Y-%m-%d %H:%M", "%d.%m.%Y %H:%M:%S"),
+        ("%d.%m.%Y %H:%M:%S", "%d.%m.%Y %H:%M:%S"),
+        ("%d.%m.%Y %H:%M", "%d.%m.%Y %H:%M:%S"),
+        ("%Y-%m-%d", "%d.%m.%Y 00:00:00"),
+        ("%d.%m.%Y", "%d.%m.%Y 00:00:00"),
+    )
+
+    for input_format, output_format in known_formats:
+        try:
+            return datetime.strptime(date_str.strip(), input_format).strftime(output_format)
+        except ValueError:
+            continue
+
+    logger.warning(f"Не удалось нормализовать дату доставки '{date_str}', отправляем как есть")
+    return date_str
 
 
 def get_orders(customer) -> dict:
@@ -48,7 +72,7 @@ async def set_orders(info, order_id, order_number, partner_id, name) -> bool:
     data = {
         "authToken": {"userkey": f"{Settings.USER_KEY}", "token": f"{Settings.TOKEN}"},
         "parcelId": f"{order_id}",
-        "recDate": info["date"],
+        "recDate": normalize_delivery_date(info["date"]),
         "recName": info["receipient"],
         "comment": name,
     }

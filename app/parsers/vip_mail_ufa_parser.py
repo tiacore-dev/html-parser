@@ -39,7 +39,9 @@ class VIPMailUfaParser(BaseParser):
 
         try:
             # Вводим номер накладной
-            number_field = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.NAME, "number")))
+            number_field = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(
+                EC.presence_of_element_located((By.NAME, "number"))
+            )
             number_field.clear()
             number_field.send_keys(orderno)
 
@@ -57,7 +59,9 @@ class VIPMailUfaParser(BaseParser):
                 return []
 
             # Ждем появления таблицы
-            table = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(EC.presence_of_element_located((By.TAG_NAME, "table")))
+            table = WebDriverWait(driver, self.DEFAULT_WAIT_TIME).until(
+                EC.presence_of_element_located((By.TAG_NAME, "table"))
+            )
             logger.info(f"{self.name}. Таблица найдена")
 
             results = self._parse_table(table)
