@@ -16,6 +16,15 @@ class Settings:
     CHAT_ID = os.getenv("CHAT_ID", "")
     BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 
+    NOTIFICATION_SERVICE_URL = os.getenv("NOTIFICATION_SERVICE_URL", "")
+    NOTIFICATION_SERVICE_API_KEY = os.getenv("NOTIFICATION_SERVICE_API_KEY", "")
+    NOTIFICATION_SERVICE_ENABLED = os.getenv("NOTIFICATION_SERVICE_ENABLED", "false").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
     URL_ARSEXPRESS = os.getenv("URL_ARSEXPRESS", "")
     URL_AVIS_LOGISTICS = os.getenv("URL_AVIS_LOGISTICS", "")
     URL_TYUMEN = os.getenv("URL_TYUMEN", "")
